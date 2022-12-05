@@ -13,7 +13,7 @@
 1. Follow this [guide](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token) to learn
     how create a new Discord Bot and add it to your server.
 > With the new Discord v2 changes, make sure all `Privileged Gateway Intents` are enabled
-2. Copy the new token of the Discord Bot and paste it [Commands.py](QuoteBot/Commands.py:39) file as the `TOKEN` global.
+2. Copy the new token of the Discord Bot and paste it [Commands.py](QuoteBot/Commands.py) file as the `TOKEN` global.
 3. Run `py main.py` in roo directory to start the bot.
 
 To use the example quotes file, run `py main.py DemoQuotes`
@@ -54,6 +54,6 @@ QuoteBot has an additional command, `qkill`, which will kill the bot process fro
 by the owner of the Bot.
 
 To exclude certain channels from 'Quote like' detection, copy the channel ID and add it the `BLACKLIST_CHANNELS` array
-found in [Commands.py](QuoteBot/Commands.py:46)
+found in [Commands.py](QuoteBot/Commands.py)
 
 Lastly, QuoteBot debug logs can also be found in the target `quotes` directory
