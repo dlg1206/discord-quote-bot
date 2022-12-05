@@ -43,6 +43,10 @@ if they match the following format:
 
 `[pre-context] "[quote]" [post-context] -[quotee]`
 
+Examples:
+- (holding a calculator) "What are you?" -Charlie Day
+- "I reign supreme over everyone in this school! I’m the golden god of this place!" (proceedes to run away) -Dennis Reynolds
+
 ## Custom Quote Lists
 By default, QuoteBot will use the [`quotes`](quotes) directory for storing quotes. To use a different quote directory,
 make a new directory with an empty `quotes.json` file. Then rerun QuoteBot with the directory as an argument like so:
