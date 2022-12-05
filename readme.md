@@ -44,7 +44,7 @@ if they match the following format:
 `[pre-context] "[quote]" [post-context] -[quotee]`
 
 Examples:
-- (holding a calculator) "What are you?" -Charlie Day
+- (holding a calculator) "What are you?" -Charlie Kelly
 - "I reign supreme over everyone in this school! I’m the golden god of this place!" (proceedes to run away) -Dennis Reynolds
 
 ## Custom Quote Lists
