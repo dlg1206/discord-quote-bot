@@ -13,10 +13,10 @@
 1. Follow this [guide](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token) to learn
     how create a new Discord Bot and add it to your server.
 > With the new Discord v2 changes, make sure all `Privileged Gateway Intents` are enabled
-2. Copy the new token of the Discord Bot and paste it [Commands.py](src/QuoteBot/Commands.py) file as the `TOKEN` global.
-3. Run `py main.py` in roo directory to start the bot.
+2. Copy the new token of the Discord Bot.
+3. Run `py main.py <token>` in `src` directory to start the bot.
 
-To use the example quotes file, run `py main.py DemoQuotes`
+To use the example quotes file, run `py main.py <token> ../DemoQuotes/quotes.json`
 
 ## Commands
 Quotebot has 7 total commands with the command prefix `!`
@@ -48,10 +48,11 @@ Examples:
 - "I reign supreme over everyone in this school! I’m the golden god of this place!" (proceedes to run away) -Dennis Reynolds
 
 ## Custom Quote Lists
-By default, QuoteBot will use the [`quotes`](quotes) directory for storing quotes. To use a different quote directory,
-make a new directory with an empty `quotes.json` file. Then rerun QuoteBot with the directory as an argument like so:
+By default, QuoteBot will use a default quotes file that can be reused. To use a different quote directory,
+make a new quotes json (see [`quotes.json`](DemoQuotes/quotes.json) for reference) file. Then rerun QuoteBot with the 
+file as an argument like so:
 
-`py main.py <your-directory>`
+`py main.py <token> <path to quote file>`
 
 ## Debug
 QuoteBot has an additional command, `qkill`, which will kill the bot process from inside Discord. This can only be used 
@@ -60,4 +61,4 @@ by the owner of the Bot.
 To exclude certain channels from 'Quote like' detection, copy the channel ID and add it the `BLACKLIST_CHANNELS` array
 found in [Commands.py](src/QuoteBot/Commands.py)
 
-Lastly, QuoteBot debug logs can also be found in the target `quotes` directory
+Lastly, QuoteBot debug logs can also be found in the current directory and print to `stdout` while running
