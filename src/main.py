@@ -40,8 +40,10 @@ def load_quote_data(quotes_path):
     except FileNotFoundError:
         print(f"File \'{quotes_path}\' was not found")
         print(f"Creating new file. . .")
-        with open(quotes_path, "x") as f:
-            f.write('{"num_quotes": 0, "quotes": {}}')
+        quotes = {"num_quotes": 0, "quotes": {}}
+        with open(quotes_path, "w") as f:
+            f.write(json.dumps(quotes, indent=4))
+        return quotes
     except:
         print(f"Failed to parse file \'{quotes_path}\'")
         exit()
