@@ -149,7 +149,7 @@ async def qadd(ctx, *, prompt=None):
         QUOTE_DATA["num_quotes"] += 1
 
         # update json file
-        with open(QUOTE_PATH + "/quotes.json", "w") as json_file:
+        with open(QUOTE_PATH, "w") as json_file:
             json_file.write(json.dumps(QUOTE_DATA, indent=4))
 
         # Confirmation

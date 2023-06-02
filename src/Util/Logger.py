@@ -14,7 +14,7 @@ def init_log(log_path=None):
     """
     Inits the log files on boot-up
 
-    :param log_file_name: optional log file name
+    :param log_path: optional log file path
     """
 
     # set log file to given, else use default
@@ -64,6 +64,8 @@ def log(user, action, is_success, add_info=None):
     # add extra info if given
     if add_info is not None:
         report['add_info'] = str(add_info)
+
+    print(report)
 
     # update data
     data['logs'].append(report)
