@@ -7,7 +7,7 @@ import json
 import random
 import re
 
-global MAX_QUOTEE_CHAR, SRC_DIR
+global MAX_QUOTEE_CHAR, QUOTE_PATH
 MAX_QUOTEE_CHAR = 30
 
 

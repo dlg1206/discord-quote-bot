@@ -30,6 +30,7 @@ def init_log(log_path=None):
         f.close()
     except FileNotFoundError:
         f = open(LOG_PATH, "x")
+        f.write('{"logs": []}')
         f.close()
 
     return
@@ -46,6 +47,7 @@ def log(user, action, is_success, add_info=None):
     :return:
     """
     # Get log data
+    global LOG_PATH
     with open(LOG_PATH) as log_file:
         data = json.load(log_file)
 

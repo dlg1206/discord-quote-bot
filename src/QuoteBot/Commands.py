@@ -16,30 +16,31 @@ from discord.ext import commands
 from Util import Util
 from Util.Logger import log
 
-global QUOTE_DATA, SRC_DIR, TOKEN, VERSION, BLACKLIST_CHANNELS
+global QUOTE_DATA, QUOTE_PATH, TOKEN, VERSION, BLACKLIST_CHANNELS
 
 intents = discord.Intents.all()
 
 client = commands.Bot(command_prefix="!", intents=intents)
 
 
-def start_bot(quote_data, src_dir):
+def start_bot(token, quote_data, quote_path):
     """
     Starts the bot
 
+    :param token: Discord Bot token
     :param quote_data: preloaded json data
-    :param src_dir: source directory of data
+    :param quote_path: source directory of data
     """
 
     # Load data
     global QUOTE_DATA
     QUOTE_DATA = quote_data
 
-    global SRC_DIR
-    SRC_DIR = src_dir
+    global QUOTE_PATH
+    QUOTE_PATH = quote_path
 
     global TOKEN
-    TOKEN = "YOUR_TOKEN_HERE"
+    TOKEN = token
 
     global VERSION
     VERSION = "2.3"
@@ -48,7 +49,7 @@ def start_bot(quote_data, src_dir):
     global BLACKLIST_CHANNELS
     BLACKLIST_CHANNELS = []
 
-    print("initializing finished, running Bot . . .")
+    print("Initializing finished, running Bot . . .")
 
     # Run the bot
     client.run(TOKEN)
@@ -64,7 +65,7 @@ async def on_ready():
 
     await client.change_presence(status=discord.Status.online, activity=discord.Game(f"{QUOTE_DATA['num_quotes']} quotes and counting!"))
     print('{0.user}'.format(client) + " is online")
-    print(f"pwd: {SRC_DIR}")
+    print(f"Quote File: {QUOTE_PATH}")
     print("Token ID: " + TOKEN)
 
     log("admin", "run bot", True)
@@ -94,7 +95,7 @@ async def on_message(message):
         return
 
     # attempt to add quote
-    if Util.add_quote(SRC_DIR, QUOTE_DATA, message):
+    if Util.add_quote(QUOTE_PATH, QUOTE_DATA, message):
         log(message.author, "quote-like add", True, message.content)
         await client.change_presence(activity=discord.Game(f"{QUOTE_DATA['num_quotes']} quotes and counting!"))
     else:
@@ -148,7 +149,7 @@ async def qadd(ctx, *, prompt=None):
         QUOTE_DATA["num_quotes"] += 1
 
         # update json file
-        with open(SRC_DIR + "/quotes.json", "w") as json_file:
+        with open(QUOTE_PATH + "/quotes.json", "w") as json_file:
             json_file.write(json.dumps(QUOTE_DATA, indent=4))
 
         # Confirmation

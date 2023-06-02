@@ -55,18 +55,19 @@ def main(token, quotes_path=None):
         quotes_path = "quotes.json"
         quotes = {"num_quotes": 0, "quotes": {}}    # default
 
-    # init_log(quotes_path)
+    init_log()
     print("Data loaded, Bot is starting . . .")
 
     # Run Bot
-    start_bot(quotes, quotes_path)
+    start_bot(token, quotes, quotes_path)
     print("done")
 
 
 if __name__ == '__main__':
 
+    # No arguments
     if len(sys.argv) == 1:
-        print("Error: missing token")
+        print("Error: missing token value")
         print("Expected usage: main.py <token>")
         print("Expected usage: main.py <token> <path_to_quote_file>")
         exit()
