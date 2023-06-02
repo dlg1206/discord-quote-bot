@@ -46,7 +46,7 @@ def load_quote_data(quotes_path):
     return quotes
 
 
-def main(quotes_path=None):
+def main(token, quotes_path=None):
 
     # Attempt to load data if path given
     if quotes_path is not None:
@@ -65,7 +65,16 @@ def main(quotes_path=None):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) != 1:
+    if len(sys.argv) == 1:
+        print("Error: missing token")
+        print("Expected usage: main.py <token>")
+        print("Expected usage: main.py <token> <path_to_quote_file>")
+        exit()
+
+    # Pass just token value
+    if len(sys.argv) == 2:
         main(sys.argv[1])
-    else:
-        main()
+
+    # Pass token and quote file
+    if len(sys.argv) > 2:
+        main(sys.argv[1], sys.argv[2])
