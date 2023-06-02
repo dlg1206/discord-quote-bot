@@ -6,7 +6,7 @@ Logger for actions
 import datetime
 import json
 
-global DEFAULT_LOG_FILE_NAME, LOG_DIR, LOG_FILE
+global DEFAULT_LOG_FILE_NAME, LOG_PATH, LOG_FILE
 DEFAULT_LOG_FILE_NAME = "quotebot_log.json"
 LOG_FILE = {'logs': []}
 
@@ -18,27 +18,21 @@ def init_log(log_dir, log_file_name=None):
     :param log_dir: source directory to check for existing logs
     :param log_file_name: optional log file name
     """
-
-    # set src directory
-    global LOG_DIR
-    LOG_DIR = log_dir
-
+    global LOG_PATH
     # set log file name if given, else default
     if log_file_name is None:
-        global LOG_FILE
-        LOG_FILE = DEFAULT_LOG_FILE_NAME
+        LOG_PATH = f"{log_dir}/{DEFAULT_LOG_FILE_NAME}"
     else:
-        global LOG_FILE
-        LOG_FILE = log_file_name
+        LOG_PATH = f"{log_dir}/{log_file_name}.json"
 
     # Make new file if needed, load data otherwise
     try:
-        f = open(f"{LOG_DIR}/{LOG_FILE}")
+        f = open(LOG_PATH)
         global LOG_FILE
         LOG_FILE = json.load(f)
         f.close()
     except FileNotFoundError:
-        f = open(f"{LOG_DIR}/{LOG_FILE}", "x")
+        f = open(LOG_PATH, "x")
         f.close()
 
     return

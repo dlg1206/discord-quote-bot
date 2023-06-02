@@ -42,7 +42,7 @@ def start_bot(quote_data, src_dir):
     TOKEN = "YOUR_TOKEN_HERE"
 
     global VERSION
-    VERSION = "2.2"
+    VERSION = "2.3"
 
     # ADD CHANNEL ID'S TO EXCLUDE FROM QUOTE DETECTION
     global BLACKLIST_CHANNELS
