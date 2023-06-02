@@ -9,26 +9,31 @@ import sys
 from QuoteBot import start_bot
 from Util.Logger import init_log
 
+global DEFAULT_QUOTE_FILE, LOG_PATH, LOG_FILE
+DEFAULT_LOG_FILE_NAME = "quotebot_log.json"
+
 
 def load_quote_data(quotes_path):
 
     # Attempt to read data
     try:
-        with open(quotes_path, "w") as json_file:
+        with open(quotes_path) as json_file:
             quotes = json.load(json_file)
 
-            # Make sure quote count correct
-            num_quotes = 0
-            for quotee in quotes['quotes']:
-                num_quotes += len(quotes['quotes'][quotee])
+        # Make sure quote count correct
+        num_quotes = 0
+        for quotee in quotes['quotes']:
+            num_quotes += len(quotes['quotes'][quotee])
 
-            # Quotes are correct
-            if num_quotes == quotes['num_quotes']:
-                print("count and stored match")
-            # Update and fix count
-            else:
-                print("count and stored mismatched, updating ...")
-                quotes['num_quotes'] = num_quotes
+        # Quotes are correct
+        if num_quotes == quotes['num_quotes']:
+            print("count and stored match")
+        # Update and fix count
+        else:
+            print("count and stored mismatched, updating ...")
+            quotes['num_quotes'] = num_quotes
+
+            with open(quotes_path, "w") as json_file:
                 json_file.write(json.dumps(quotes, indent=4))
 
     except FileNotFoundError:
@@ -47,6 +52,7 @@ def main(quotes_path=None):
     if quotes_path is not None:
         quotes = load_quote_data(quotes_path)
     else:
+        quotes_path = "quotes.json"
         quotes = {"num_quotes": 0, "quotes": {}}    # default
 
     # init_log(quotes_path)

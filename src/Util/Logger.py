@@ -6,30 +6,27 @@ Logger for actions
 import datetime
 import json
 
-global DEFAULT_LOG_FILE_NAME, LOG_PATH, LOG_FILE
-DEFAULT_LOG_FILE_NAME = "quotebot_log.json"
-LOG_FILE = {'logs': []}
+global DEFAULT_LOG_PATH, LOG_PATH
+DEFAULT_LOG_PATH = "quotebot_log.json"
 
 
-def init_log(log_dir, log_file_name=None):
+def init_log(log_path=None):
     """
     Inits the log files on boot-up
 
-    :param log_dir: source directory to check for existing logs
     :param log_file_name: optional log file name
     """
+
+    # set log file to given, else use default
     global LOG_PATH
-    # set log file name if given, else default
-    if log_file_name is None:
-        LOG_PATH = f"{log_dir}/{DEFAULT_LOG_FILE_NAME}"
+    if log_path is not None:
+        LOG_PATH = f"{log_path}.json"
     else:
-        LOG_PATH = f"{log_dir}/{log_file_name}.json"
+        LOG_PATH = f"{DEFAULT_LOG_PATH}"
 
     # Make new file if needed, load data otherwise
     try:
         f = open(LOG_PATH)
-        global LOG_FILE
-        LOG_FILE = json.load(f)
         f.close()
     except FileNotFoundError:
         f = open(LOG_PATH, "x")
@@ -48,10 +45,13 @@ def log(user, action, is_success, add_info=None):
     :param add_info: any additional info, optional
     :return:
     """
+    # Get log data
+    with open(LOG_PATH) as log_file:
+        data = json.load(log_file)
 
     # make report
     report = {
-        'id': len(LOG_FILE['logs']),
+        'id': len(data['logs']),
         'time': str(datetime.datetime.now()),
         'user': str(user),
         'action': str(action),
@@ -62,10 +62,12 @@ def log(user, action, is_success, add_info=None):
     # add extra info if given
     if add_info is not None:
         report['add_info'] = str(add_info)
-    LOG_FILE['logs'].append(report)
 
-    # update files
-    with open(f"{LOG_DIR}/{LOG_FILE}", "w") as log_file:
-        log_file.write(json.dumps(LOG_FILE, indent=4))
+    # update data
+    data['logs'].append(report)
+
+    # update file
+    with open(LOG_PATH, "w") as log_file:
+        log_file.write(json.dumps(data, indent=4))
 
     return
