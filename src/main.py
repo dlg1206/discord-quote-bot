@@ -7,7 +7,7 @@ Main Program that manages and Runs the Bot
 import json
 import sys
 from QuoteBot import start_bot
-from QuoteBot.Util import init_log
+from Util.Util import init_log
 
 
 def main(src_dir):

@@ -3,71 +3,12 @@ Utility programs for commands
 
 @author Derek Garcia
 """
-import datetime
 import json
 import random
 import re
 
-global MAX_QUOTEE_CHAR, DATA_LOG, SRC_DIR
+global MAX_QUOTEE_CHAR, SRC_DIR
 MAX_QUOTEE_CHAR = 30
-DATA_LOG = {'logs': []}
-
-
-def init_log(src_dir):
-    """
-    Inits the log files on boot-up
-
-    :param src_dir: source directory to check for existing logs
-    """
-
-    # set src directory
-    global SRC_DIR
-    SRC_DIR = src_dir
-
-    # Make new file if needed, load data otherwise
-    try:
-        f = open(f"{src_dir}/Data-Log.json")
-        global DATA_LOG
-        DATA_LOG = json.load(f)
-        f.close()
-    except FileNotFoundError:
-        f = open(f"{src_dir}/Data-Log.json", "x")
-        f.close()
-
-    return
-
-
-def data_log(user, action, is_success, add_info=None):
-    """
-    Logs action into data log
-
-    :param user: User who performed action
-    :param action: Action
-    :param is_success: result of action
-    :param add_info: any additional info, optional
-    :return:
-    """
-
-    # make report
-    report = {
-        'id': len(DATA_LOG['logs']),
-        'time': str(datetime.datetime.now()),
-        'user': str(user),
-        'action': str(action),
-        'is_success': str(is_success),
-        'add_info': "null"
-    }
-
-    # add extra info if given
-    if add_info is not None:
-        report['add_info'] = str(add_info)
-    DATA_LOG['logs'].append(report)
-
-    # update files
-    with open(f"{SRC_DIR}/Data-Log.json", "w") as log_file:
-        log_file.write(json.dumps(DATA_LOG, indent=4))
-
-    return
 
 
 def disp_format(quotee):
@@ -232,5 +173,3 @@ def similar_names(quotes, keywords):
         return None
     else:
         return suggest
-
-

@@ -13,8 +13,8 @@ from discord.ext import commands
 
 # define globals
 
-from QuoteBot import Util
-from QuoteBot.Util import data_log
+from Util import Util
+from Util.Logger import log
 
 global QUOTE_DATA, SRC_DIR, TOKEN, VERSION, BLACKLIST_CHANNELS
 
@@ -67,7 +67,7 @@ async def on_ready():
     print(f"pwd: {SRC_DIR}")
     print("Token ID: " + TOKEN)
 
-    data_log("admin", "run bot", True)
+    log("admin", "run bot", True)
     return
 
 
@@ -95,10 +95,10 @@ async def on_message(message):
 
     # attempt to add quote
     if Util.add_quote(SRC_DIR, QUOTE_DATA, message):
-        data_log(message.author, "quote-like add", True, message.content)
+        log(message.author, "quote-like add", True, message.content)
         await client.change_presence(activity=discord.Game(f"{QUOTE_DATA['num_quotes']} quotes and counting!"))
     else:
-        data_log(message.author, "quote-like add", False, message.content)
+        log(message.author, "quote-like add", False, message.content)
     return
 
 
@@ -116,7 +116,7 @@ async def qadd(ctx, *, prompt=None):
     # Check if prompt was given
     if prompt is None:
         await ctx.channel.send("Proper Usage: `!qadd \"[quote]\" -[Quotee]`")
-        data_log(ctx.message.author, "!qadd", False, "No args")
+        log(ctx.message.author, "!qadd", False, "No args")
         return
 
     # Else split
@@ -126,7 +126,7 @@ async def qadd(ctx, *, prompt=None):
     # Error check, should only be 2 parts
     if len(split_prompt) != 2:
         await ctx.channel.send("Sorry, I didn't get that :(\nCommand: `!qadd \"[quote]\" -[Quotee]`")
-        data_log(ctx.message.author, "!qadd", False, f"invalid args: {prompt}")
+        log(ctx.message.author, "!qadd", False, f"invalid args: {prompt}")
     # Quote is valid
     else:
         # Break quote into quote and quotee
@@ -157,7 +157,7 @@ async def qadd(ctx, *, prompt=None):
         await client.change_presence(activity=discord.Game(f"{QUOTE_DATA['num_quotes']} quotes and counting!"))
 
     # Record Outcome in data file
-    data_log(ctx.message.author, "!qadd", True, prompt)
+    log(ctx.message.author, "!qadd", True, prompt)
 
     return
 
@@ -174,7 +174,7 @@ async def q(ctx, *, quotee=None):
     # check if quotee was given
     if quotee is None:
         await ctx.channel.send("Proper Usage: `!q [Name]`")
-        data_log(ctx.message.author, "!q", False, "No args")
+        log(ctx.message.author, "!q", False, "No args")
         return
 
     # If name exist in QUOTE_DATA
@@ -182,7 +182,7 @@ async def q(ctx, *, quotee=None):
     if rand_quote is not None:
         # Print quote and person
         await ctx.channel.send(f"{rand_quote} -{Util.disp_format(quotee)}")
-        data_log(ctx.message.author, "!q", True)
+        log(ctx.message.author, "!q", True)
     # If name not in QUOTES
     else:
 
@@ -194,7 +194,7 @@ async def q(ctx, *, quotee=None):
         if suggest is not None:
             await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
 
-        data_log(ctx.message.author, "!q", False, f"No quotes from {quotee}")
+        log(ctx.message.author, "!q", False, f"No quotes from {quotee}")
 
     return
 
@@ -209,7 +209,7 @@ async def qall(ctx, *, quotee=None):
 
     if quotee is None:
         await ctx.channel.send("Proper Usage: `!qall [Name]`")
-        data_log(ctx.message.author, "!qall", False, "No args")
+        log(ctx.message.author, "!qall", False, "No args")
         return
 
     # If name exist in QUOTES
@@ -224,7 +224,7 @@ async def qall(ctx, *, quotee=None):
 
         await ctx.channel.send(f"{all_quotes}"
                                f"**{Util.disp_format(quotee)} has {count - 1} quotes!**")
-        data_log(ctx.message.author, "!qall", True)
+        log(ctx.message.author, "!qall", True)
     # If name isn't in QUOTES
     else:
         await ctx.channel.send("I don't have any quotes from " + f"{Util.disp_format(quotee)}" + " :(")
@@ -234,7 +234,7 @@ async def qall(ctx, *, quotee=None):
         if suggest is not None:
             await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
 
-        data_log(ctx.message.author, "!qall", False, f"No quotes from {quotee}")
+        log(ctx.message.author, "!qall", False, f"No quotes from {quotee}")
     return
 
 
@@ -250,7 +250,7 @@ async def qrand(ctx):
     await ctx.channel.send(f"{rand_quote} -{Util.disp_format(quotee)}")
 
     # Record Outcome in data file
-    data_log(ctx.message.author, "!qrand", True)
+    log(ctx.message.author, "!qrand", True)
     return
 
 
@@ -270,13 +270,13 @@ async def qsearch(ctx, *, keywords=None):
             suggest = f"{suggest}> {Util.disp_format(name)}\n"
 
         await ctx.channel.send(f"**I have quotes from all these people!**\n{suggest.strip()}")
-        data_log(ctx.message.author, "!qsearch", True)
+        log(ctx.message.author, "!qsearch", True)
     else:
         # List names that match the keywords
         suggest = Util.similar_names(QUOTE_DATA['quotes'], keywords)
         if suggest is not None:
             await ctx.channel.send(f"Here's what I could find:\n{suggest.strip()}")
-            data_log(ctx.message.author, "!qsearch [keywords]", True)
+            log(ctx.message.author, "!qsearch [keywords]", True)
     return
 
 
@@ -291,7 +291,7 @@ async def qstat(ctx, *, quotee=None):
     if quotee is None:
         # Print num quotes from num people
         await ctx.channel.send(f"I have {QUOTE_DATA['num_quotes']} quotes from {len(QUOTE_DATA['quotes'])} people!")
-        data_log(ctx.message.author, "!qstat", True)
+        log(ctx.message.author, "!qstat", True)
         return
 
     # Check if in data
@@ -302,7 +302,7 @@ async def qstat(ctx, *, quotee=None):
 
         # Print quote and person
         await ctx.channel.send(f"{Util.disp_format(quotee)} has {len(person)} quotes!")
-        data_log(ctx.message.author, "!qstat [quotee]", True, quotee)
+        log(ctx.message.author, "!qstat [quotee]", True, quotee)
     # If name not in QUOTES
     else:
         # Print not found
@@ -313,7 +313,7 @@ async def qstat(ctx, *, quotee=None):
         if suggest is not None:
             await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
 
-        data_log(ctx.message.author, "!qstat", False, f"No quotes from {quotee}")
+        log(ctx.message.author, "!qstat", False, f"No quotes from {quotee}")
     return
 
 
@@ -340,7 +340,7 @@ async def qhelp(ctx):
                            "> `[pre-context] \"[quote]\" [post-context] -[quotee]`\n" +
                            "> There's no guarantee, but it's good at detecting them. `!qadd` is the only way\n" +
                            "> to add quotes for sure")
-    data_log(ctx.message.author, "!qhelp", True)
+    log(ctx.message.author, "!qhelp", True)
 
     return
 
