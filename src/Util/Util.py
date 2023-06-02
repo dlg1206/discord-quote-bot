@@ -98,11 +98,11 @@ def is_quote(msg):
     return True
 
 
-def add_quote(src_dir, quote_data, raw_msg):
+def add_quote(quote_path, quote_data, raw_msg):
     """
     Attempts to add a 'quote-like' message to the json file
 
-    :param src_dir: source directory
+    :param quote_path: source file
     :param quote_data: quote data to add to
     :param raw_msg: raw discord message to parse
     :return: True if successful, false otherwise
@@ -142,14 +142,14 @@ def add_quote(src_dir, quote_data, raw_msg):
                  'timestamp': str(raw_msg.created_at)
                  }
 
-    if quotee not in quote_data['DemoQuotes']:
-        quote_data['DemoQuotes'][quotee] = []
+    if quotee not in quote_data['quotes']:
+        quote_data['quotes'][quotee] = []
 
     # Append and update count
-    quote_data['DemoQuotes'][quotee].append(quote_obj)
+    quote_data['quotes'][quotee].append(quote_obj)
     quote_data['num_quotes'] += 1
 
-    with open(src_dir + "/DemoQuotes.json", "w") as json_file:
+    with open(quote_path, "w") as json_file:
         json_file.write(json.dumps(quote_data, indent=4))
 
     return True
