@@ -11,10 +11,10 @@ import datetime
 
 from discord.ext import commands
 
-# define globals
+from util import Util
+from util.Logger import log
 
-from Util import Util
-from Util.Logger import log
+# define globals
 
 global QUOTE_DATA, QUOTE_PATH, TOKEN, VERSION, BLACKLIST_CHANNELS
 
@@ -25,7 +25,7 @@ client = commands.Bot(command_prefix="!", intents=intents)
 
 def start_bot(token, quote_data, quote_path):
     """
-    Starts the bot
+    Starts the cmd
 
     :param token: Discord Bot token
     :param quote_data: preloaded json data
@@ -51,7 +51,7 @@ def start_bot(token, quote_data, quote_path):
 
     print("Initializing finished, running Bot . . .")
 
-    # Run the bot
+    # Run the cmd
     client.run(TOKEN)
     return
 
@@ -59,7 +59,7 @@ def start_bot(token, quote_data, quote_path):
 @client.event
 async def on_ready():
     """
-    Tells console that bot is active and basic infor
+    Tells console that cmd is active and basic infor
     :return:
     """
 
@@ -68,7 +68,7 @@ async def on_ready():
     print(f"Quote File: {QUOTE_PATH}")
     print("Token ID: " + TOKEN)
 
-    log("admin", "run bot", True)
+    log("admin", "run cmd", True)
     return
 
 
