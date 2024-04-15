@@ -7,8 +7,8 @@ Main Program that manages and Runs the Bot
 import json
 import sys
 
-from QuoteBot import start_bot
-from Util.Logger import init_log
+from bot.QuoteBot import QuoteBot
+from util.Logger import init_log
 
 global DEFAULT_QUOTE_FILE, LOG_PATH, LOG_FILE
 DEFAULT_QUOTE_FILE = "quotes.json"
@@ -66,7 +66,8 @@ def main(token, quotes_path=None):
     print("Data loaded, Bot is starting . . .")
 
     # Run Bot
-    start_bot(token, quotes, quotes_path)
+    bot = QuoteBot(quotes, quotes_path)
+    bot.run(token)
     print("done")
 
 
@@ -75,8 +76,8 @@ if __name__ == '__main__':
     # No arguments
     if len(sys.argv) == 1:
         print("Error: missing token value")
-        print("Expected usage: main.py <token>")
-        print("Expected usage: main.py <token> <path_to_quote_file>")
+        print("Expected usage: __main__.py <token>")
+        print("Expected usage: __main__.py <token> <path_to_quote_file>")
         exit()
 
     # Pass just token value
