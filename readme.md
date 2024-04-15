@@ -59,6 +59,6 @@ QuoteBot has an additional command, `qkill`, which will kill the bot process fro
 by the owner of the Bot.
 
 To exclude certain channels from 'Quote like' detection, copy the channel ID and add it the `BLACKLIST_CHANNELS` array
-found in [Commands.py](src/QuoteBot/Commands.py)
+found in [Commands.py](src/bot/Commands.py)
 
 Lastly, QuoteBot debug logs can also be found in the current directory and print to `stdout` while running

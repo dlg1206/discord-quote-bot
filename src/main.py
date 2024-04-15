@@ -7,8 +7,8 @@ Main Program that manages and Runs the Bot
 import json
 import sys
 
-from QuoteBot import start_bot
-from Util.Logger import init_log
+from bot import start_bot
+from util.Logger import init_log
 
 global DEFAULT_QUOTE_FILE, LOG_PATH, LOG_FILE
 DEFAULT_QUOTE_FILE = "quotes.json"
