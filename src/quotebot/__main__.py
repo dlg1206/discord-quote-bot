@@ -7,7 +7,7 @@ Main Program that manages and Runs the Bot
 import json
 import sys
 
-from cmd.Commands import start_bot
+from bot.QuoteBot import QuoteBot
 from util.Logger import init_log
 
 global DEFAULT_QUOTE_FILE, LOG_PATH, LOG_FILE
@@ -66,7 +66,8 @@ def main(token, quotes_path=None):
     print("Data loaded, Bot is starting . . .")
 
     # Run Bot
-    start_bot(token, quotes, quotes_path)
+    bot = QuoteBot(quotes, quotes_path)
+    bot.run(token)
     print("done")
 
 
