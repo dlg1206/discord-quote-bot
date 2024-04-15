@@ -15,7 +15,7 @@ from discord.ext import commands
 from util import Util
 from util.Logger import log
 
-VERSION = "2.3"
+VERSION = "2.4"
 
 
 class QuoteBot(commands.Bot):
