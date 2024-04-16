@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS quote
 (
     time        TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    qid         INTEGER AUTO INCREMENT PRIMARY KEY,
+    ROWID       INTEGER PRIMARY KEY                 NOT NULL, -- use sqlite rowid as pk instead of redundant auto inc
     quote       TEXT                                NOT NULL,
     quotee      TEXT                                NOT NULL,
     contributor TEXT                                NOT NULL,

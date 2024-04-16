@@ -3,51 +3,9 @@ Utility programs for commands
 
 @author Derek Garcia
 """
-import json
-import random
 import re
 
-global MAX_QUOTEE_CHAR, QUOTE_PATH
 MAX_QUOTEE_CHAR = 30
-
-
-def disp_format(quotee):
-    """
-    Converts the quotee to a display format
-    :param quotee: name to be converted
-    :return: display_name
-    """
-    # attempt to upper both first and last name
-    try:
-        first_name = quotee.split(" ")[0]
-        last_name = quotee.split(" ")[1]
-
-        return f"{first_name[0].upper() + first_name[1:].lower()} {last_name[0].upper() + last_name[1:].lower()}"
-
-    # Else just upper first name
-    except:
-        return quotee[0].upper() + quotee[1:].lower()
-
-
-def rand_quote(quote_list, quotee):
-    """
-    Gets a random quote form the given quotee
-
-    :param quote_list: list of all people and their DemoQuotes
-    :param quotee: quotee to search for
-    :return: random quote if found, None otherwise
-    """
-
-    if quotee in quote_list:
-
-        # Get person from QUOTES and random quote
-        person = quote_list[quotee]
-        i = random.randrange(0, len(person))
-        return person[i]['quote']
-
-    # If name not in QUOTES
-    else:
-        return None
 
 
 def is_command(msg):
@@ -98,12 +56,11 @@ def is_quote(msg):
     return True
 
 
-def add_quote(quote_path, quote_data, raw_msg):
+def add_quote(database, raw_msg):
     """
     Attempts to add a 'quote-like' message to the json file
 
-    :param quote_path: source file
-    :param quote_data: quote data to add to
+    :param database: database to upload quotes to
     :param raw_msg: raw discord message to parse
     :return: True if successful, false otherwise
     """
@@ -137,39 +94,4 @@ def add_quote(quote_path, quote_data, raw_msg):
     # build quote
     full_quote = f"{before} \"{quote}\" {after}".strip()
 
-    quote_obj = {'quote': full_quote,
-                 'contributor': str(raw_msg.author.name),
-                 'timestamp': str(raw_msg.created_at)
-                 }
-
-    if quotee not in quote_data['quotes']:
-        quote_data['quotes'][quotee] = []
-
-    # Append and update count
-    quote_data['quotes'][quotee].append(quote_obj)
-    quote_data['num_quotes'] += 1
-
-    with open(quote_path, "w") as json_file:
-        json_file.write(json.dumps(quote_data, indent=4))
-
-    return True
-
-
-def similar_names(quotes, keywords):
-    """
-    Generates a string of similar names in correct display format
-
-    :param quotes: list of names in the database
-    :param keywords: keywords to search for
-    """
-    # Find all matches
-    suggest = ""
-    for quotee in quotes:
-        if keywords in quotee:
-            suggest = f"{suggest}> {disp_format(quotee)}\n"
-
-    # Return results
-    if suggest == "":
-        return None
-    else:
-        return suggest
+    return database.add_quote(full_quote, quotee, str(raw_msg.author.name)) == 0
