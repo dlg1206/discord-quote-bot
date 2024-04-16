@@ -9,11 +9,11 @@ import discord
 from discord.ext import commands
 
 from db.Database import Database
-from quote.Quote import format_quotee
+from quote.Quote import format_quotee, is_quote, parse_quote
 from util import Util
 
 VERSION = "2.4"
-SOURCE_CODE = "https://github.com/dlg1206/Discord-Quote-Bot"
+SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
 
 
 class QuoteBot(commands.Bot):
@@ -52,23 +52,14 @@ class QuoteBot(commands.Bot):
                 # log(ctx.message.author, "!qadd", False, "No args")    # TODO
                 return
 
-            # Else split
-            key = '-'  # Custom Split key
-            split_prompt = f"{prompt}".split(key)
-
-            # Error check, should only be 2 parts
-            if len(split_prompt) != 2:
+            # Check if quote
+            if not is_quote(prompt):
                 await ctx.channel.send('Sorry, I didn\'t get that :(\nCommand: `!qadd "[quote]" -[Quotee]`')
                 return
                 # log(ctx.message.author, "!qadd", False, f"invalid args: {prompt}")    # TODO
 
-            # Quote is valid
-            # Break quote into quote and quotee
-            quote = split_prompt[0].replace("\"", "").strip()
-            quotee = split_prompt[1].lower().strip()
-
             # Upload to db
-            code = self.database.add_quote(quote, quotee, str(ctx.message.author))
+            code = self.database.add_quote(parse_quote(prompt), str(ctx.message.author))
 
             # Confirmation
             if code == 0:
@@ -104,12 +95,7 @@ class QuoteBot(commands.Bot):
                 return
 
             # If name not in QUOTES, print not found
-            await ctx.channel.send("I don't have any quotes from " + f"{quotee}" + " :(")
-
-            # list similar if any
-            similar = [format_quotee(q) for q in self.database.find_similar_quotee(quotee)]
-            if len(similar) != 0:
-                await ctx.channel.send(f"Did you mean anyone here?\n{'\n'.join(similar)}")
+            await self.list_similar(ctx, quotee)
 
             # log(ctx.message.author, "!q", False, f"No quotes from {quotee}")  # TODO
 
@@ -132,19 +118,13 @@ class QuoteBot(commands.Bot):
 
             # If no quotes, check for similar
             if len(quotes) == 0:
-                await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
-
-                # list similar if any
-                similar = [format_quotee(q) for q in self.database.find_similar_quotee(quotee)]
-                if len(similar) != 0:
-                    await ctx.channel.send(f"Did you mean anyone here?\n{'\n'.join(similar)}")
-
+                await self.list_similar(ctx, quotee)
                 # log(ctx.message.author, "!qall", False, f"No quotes from {quotee}")   # TODO
                 return
 
             # Format and display all quotes
             only_quotes = [f'> - "{q.quote}"' for q in quotes]
-            await ctx.channel.send(f"{'\n'.join(only_quotes)}"
+            await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
                                    f"**{format_quotee(quotee)} has {len(quotes)} quotes!**")
             # log(ctx.message.author, "!qall", True)    # TODO
 
@@ -207,13 +187,7 @@ class QuoteBot(commands.Bot):
             # No quotes from quotee
             else:
                 # Print not found
-                await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
-
-                # print similar if any
-                similar = [format_quotee(q) for q in self.database.find_similar_quotee(quotee)]
-                if len(similar) != 0:
-                    await ctx.channel.send(f"Did you mean anyone here?\n{'\n'.join(similar)}")
-
+                await self.list_similar(ctx, quotee)
                 # log(ctx.message.author, "!qstat", False, f"No quotes from {quotee}")  # TODO
 
         @self.command()
@@ -237,7 +211,7 @@ class QuoteBot(commands.Bot):
                                    "> - Help: `!qhelp`")
             await ctx.channel.send("**'Quote Like' Support**\n" +
                                    "> QuoteBoi will detect 'Quote Like' messages in *roughly* the following format:\n" +
-                                   "> `[pre-context] \"[quote]\" [post-context] -[quotee]`\n" +
+                                   "> `(pre-context) \"quote\" (post-context) -quotee`\n" +
                                    "> There's no guarantee, but it's good at detecting them. `!qadd` is the only way\n" +
                                    "> to add quotes for sure")
             # log(ctx.message.author, "!qhelp", True) # TODO
@@ -255,6 +229,15 @@ class QuoteBot(commands.Bot):
             quote = self.database.get_rand_quote()
             await ctx.channel.send(f'Goodbye, and in the words of {format_quotee(quote.quotee)}: "{quote}"')
             exit(0)
+
+    async def list_similar(self, ctx: discord.channel, quotee: str, prompt: str = "Did you mean anyone here?"):
+        # Print not found
+        await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
+
+        # print similar if any
+        similar = [f"> - {format_quotee(q)}" for q in self.database.find_similar_quotee(quotee)]
+        if len(similar) != 0:
+            await ctx.channel.send(f"{prompt}\n{'\n'.join(similar)}\n")
 
     async def on_message(self, message) -> None:
         """
@@ -278,7 +261,8 @@ class QuoteBot(commands.Bot):
             return
 
         # attempt to add quote
-        if Util.add_quote(self.database, message):
+        if is_quote(message.content):
+            self.database.add_quote(parse_quote(message.content), str(message.author))
             # log(message.author, "quote-like add", True, message.content)    # TODO
             await self.change_presence(
                 activity=discord.Game(f"{self.database.get_quote_total()} quotes and counting!"))

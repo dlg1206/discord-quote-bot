@@ -23,7 +23,6 @@ class Database:
         """
         # use defaults if empty or none
         self.db_location = DEFAULT_DB_PATH if db_location is None or not db_location else db_location
-        print(os.getcwd())
         self.ddl_location = DEFAULT_DDL_PATH
 
         # build db
@@ -41,11 +40,11 @@ class Database:
         conn.commit()
         conn.close()
 
-    def add_quote(self, quote: str, quotee: str, contributor: str) -> int:
+    def add_quote(self, quote: Quote, contributor: str) -> int:
         conn = sqlite3.connect(self.db_location)
         cur = conn.cursor()
         try:
-            cur.execute("INSERT INTO quotee VALUES (?);", (quotee,))
+            cur.execute("INSERT INTO quotee VALUES (?);", (quote.quotee,))
             conn.commit()
         except sqlite3.IntegrityError as ie:
             # TODO log repeat
@@ -71,8 +70,8 @@ class Database:
 
         try:
             cur.execute(
-                "INSERT INTO quote (quote, quotee, contributor) VALUES (?, ?, ?);",
-                (quote, quotee, contributor)
+                "INSERT INTO quote (pre_context, quote, post_context, quotee, contributor) VALUES (?, ?, ?, ?, ?);",
+                (quote.pre_context, quote.quote, quote.post_context, quote.quotee, contributor)
             )
             conn.commit()
         except Exception as e:
@@ -127,17 +126,17 @@ class Database:
         try:
             # No quotee, get all quotes
             if quotee is None:
-                cur.execute("SELECT quote, quotee FROM quote;")
+                cur.execute("SELECT quote, quotee, pre_context, post_context FROM quote;")
             # Else get all quotes by person
             else:
                 cur.execute(
-                    "SELECT quote, quotee FROM quote WHERE quotee = ?;",
+                    "SELECT quote, quotee, pre_context, post_context FROM quote WHERE quotee = ?;",
                     (quotee,)
                 )
             data = cur.fetchall()
             conn.commit()
 
-            return [Quote(q[0], q[1]) for q in data]
+            return [Quote(q[0], q[1], q[2], q[3]) for q in data]
         except Exception as e:
             # TODO log err
             print(e)
@@ -194,5 +193,5 @@ if __name__ == '__main__':
     # db.add_quote("foobar", "foo", "bar")
     # db.get_quote_total()
     # al = db.get_all_quotes()
-    foo = db.get_quote_total("b")
-    print(foo)
+    # foo = db.get_quote_total("b")
+    # print(foo)
