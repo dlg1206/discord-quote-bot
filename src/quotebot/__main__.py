@@ -3,9 +3,13 @@ Main Program that manages and Runs the Bot
 
 @author Derek Garcia
 """
-
+import argparse
 import json
+import os
 import sys
+from pathlib import Path
+
+from dotenv import load_dotenv
 
 from bot.QuoteBot import QuoteBot
 from util.Logger import init_log
@@ -73,17 +77,13 @@ def main(token, quotes_path=None):
 
 if __name__ == '__main__':
 
-    # No arguments
-    if len(sys.argv) == 1:
-        print("Error: missing token value")
-        print("Expected usage: __main__.py <token>")
-        print("Expected usage: __main__.py <token> <path_to_quote_file>")
-        exit()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-e', '--environment', help="Environment file with database connection details")
+    args = parser.parse_args()
 
-    # Pass just token value
-    if len(sys.argv) == 2:
-        main(sys.argv[1])
+    if args.environment is None:
+        load_dotenv()
+    else:
+        load_dotenv(dotenv_path=Path(args.environment))
 
-    # Pass token and quote file
-    if len(sys.argv) > 2:
-        main(sys.argv[1], sys.argv[2])
+    main(os.getenv("TOKEN"))
