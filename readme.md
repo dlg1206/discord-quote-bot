@@ -102,20 +102,20 @@ docker build -t quotebot:2.5.0 .
 #### Quick Start
 ( If running in the root directory )
 ```bash
-docker run --rm -it -d -e TOKEN=<your token here> pi
+docker run --rm -it -d -e TOKEN=<your token here> quotebot:2.5.0
 ```
 To reattach, run `docker attach quotebot`
 
 #### Explanation
 ```bash
 # Just using token
-docker run --rm -it -d -e TOKEN=<your token here> -v $pwd/<path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+docker run --rm -it -d -e TOKEN=<your token here> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
 # or using env file 
-docker run --rm -it -d --env-file <path to env file> -v $pwd/<path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+docker run --rm -it -d --env-file <path to env file> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
 ```
 - `--rm`: Remove container when finished
 - `-it`: Open interactive shell to allow for `docker attach`
-- `-d`: Run container in detached mode, i.e. in the background
+- `-d`: Run container in detached mode, i.e. in the background. Remove if you want to run attached
 - `-e`: Set environment variable, TOKEN must be set
 - `--env-file`: Path to environment file to use, same as `python3 quotebot -e <path to env file>`
 - `-v`: Mount db directory to container's db directory. This allows for the container to stopped and started without 
