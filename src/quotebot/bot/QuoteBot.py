@@ -226,7 +226,7 @@ class QuoteBot(commands.Bot):
             :param ctx: command
             """
             quote = self.database.get_rand_quote()
-            await ctx.channel.send(f'Goodbye, and in the words of {format_quotee(quote.quotee)}: "{quote}"')
+            await ctx.channel.send(f'Goodbye, and in the words of {format_quotee(quote.quotee)}: {quote}')
             self.logger.log(str(ctx.message.author), "!qkill", Status.SUCCESS)
             exit(0)
 
