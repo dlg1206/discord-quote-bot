@@ -16,7 +16,7 @@ from db.Database import Database
 def main():
     # Run Bot
     database = Database(os.getenv("DATABASE_PATH"))
-    bot = QuoteBot(database)
+    bot = QuoteBot(database, os.getenv("BLACKLIST"))
     bot.run(os.getenv("TOKEN"))
 
 

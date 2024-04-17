@@ -20,7 +20,7 @@ COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill
 
 class QuoteBot(commands.Bot):
 
-    def __init__(self, database: Database):
+    def __init__(self, database: Database, blacklist_channels: str = None):
         """
         Create new Bot
 
@@ -33,7 +33,7 @@ class QuoteBot(commands.Bot):
         self.source_code = SOURCE_CODE
 
         # ADD CHANNEL ID'S TO EXCLUDE FROM QUOTE DETECTION
-        self.blacklist_channels = []
+        self.blacklist_channels = [] if blacklist_channels is None else blacklist_channels.split(",")
 
         self.init_commands()
 
@@ -130,7 +130,6 @@ class QuoteBot(commands.Bot):
             await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
                                    f"**{format_quotee(quotee)} has {len(quotes)} quotes!**")
 
-
         @self.command()
         async def qrand(ctx):
             """
@@ -155,13 +154,15 @@ class QuoteBot(commands.Bot):
                 # List ALL names in database
                 all_quotees = [f"> {format_quotee(q)}" for q in self.database.get_all_quotees()]
                 await ctx.channel.send(f"**I have quotes from all these people!**\n{'\n'.join(all_quotees)}")
-                self.logger.log(str(ctx.message.author), "!qsearch", Status.SUCCESS, f"Found {len(all_quotees)} quotees")
+                self.logger.log(str(ctx.message.author), "!qsearch", Status.SUCCESS,
+                                f"Found {len(all_quotees)} quotees")
             else:
                 # List names that match the keywords
                 similar = [format_quotee(q) for q in self.database.find_similar_quotee(keywords)]
                 if len(similar) != 0:
                     await ctx.channel.send(f"Here's what I could find:\n{'\n'.join(similar)}")
-                    self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS, f"keywords={keywords}")
+                    self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
+                                    f"keywords={keywords}")
 
         @self.command()
         async def qstat(ctx, *, quotee=None):
@@ -190,7 +191,6 @@ class QuoteBot(commands.Bot):
                 # Print not found
                 self.logger.log(str(ctx.message.author), "!qstat", Status.WARN, f"No quotes from {quotee}")
                 await self.list_similar(ctx, quotee)
-
 
         @self.command()
         async def qhelp(ctx):
