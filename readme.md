@@ -24,6 +24,7 @@ cd src
 4. **(OPTIONAL)** Create a virtual python environment
 ```bash
 python3 -m venv venv
+. venv/bin/activate
 ```
 5. Install dependencies
 ```bash
@@ -101,7 +102,7 @@ docker build -t quotebot:2.5.0 .
 #### Quick Start
 ( If running in the root directory )
 ```bash
-docker run --rm -it -d -e TOKEN=<your token here> -v $pwd/src/data/db:/app/data/db --name quotebot quotebot:2.5.0
+docker run --rm -it -d -e TOKEN=<your token here> pi
 ```
 To reattach, run `docker attach quotebot`
 
