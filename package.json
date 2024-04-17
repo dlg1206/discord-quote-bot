@@ -1,6 +1,6 @@
 {
   "name": "quoteboi",
-  "version": "0.0.0",
+  "version": "2.5.0",
   "description": "> Discord Bot for Keeping track of quotes",
   "main": "index.js",
   "scripts": {
