@@ -7,7 +7,9 @@ Description: Sqlite database interface for managing quotes
 import os
 import random
 import sqlite3
+from contextlib import contextmanager
 
+from log.Logger import Status, Logger
 from quote.Quote import Quote
 
 DEFAULT_DB_PATH = "data/db/quotes.db"
@@ -26,132 +28,97 @@ class Database:
         self.ddl_location = DEFAULT_DDL_PATH
 
         # build db
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
 
-        for file in os.scandir(self.ddl_location):
-            # skip any non sql files
-            if not (file.is_file() and file.name.endswith(".sql")):
-                continue
-            # Execute sql file
-            with open(file, 'r') as sql_file:
-                cur.executescript(sql_file.read())
+                for file in os.scandir(self.ddl_location):
+                    # skip any non sql files
+                    if not (file.is_file() and file.name.endswith(".sql")):
+                        continue
+                    # Execute sql file
+                    with open(file, 'r') as sql_file:
+                        cur.executescript(sql_file.read())
 
-        conn.commit()
-        conn.close()
+        self.logger = Logger(self)
+
+    @contextmanager
+    def open_connection(self) -> sqlite3.Connection:
+        try:
+            conn = sqlite3.connect(self.db_location)
+            yield conn
+        finally:
+            conn.commit()
+            conn.close()
+
+    @contextmanager
+    def get_cursor(self, connection: sqlite3.Connection) -> sqlite3.Cursor:
+        try:
+            cur = connection.cursor()
+            yield cur
+        finally:
+            cur.close()
 
     def add_quote(self, quote: Quote, contributor: str) -> int:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            cur.execute("INSERT INTO quotee VALUES (?);", (quote.quotee,))
-            conn.commit()
-        except sqlite3.IntegrityError as ie:
-            # TODO log repeat
-            print(ie)
-        except Exception as e:
-            # TODO log err
-            print(e)
-            conn.commit()
-            conn.close()
-            return -1
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                try:
+                    cur.execute("INSERT INTO quotee VALUES (?);", (quote.quotee,))
+                    conn.commit()
+                except sqlite3.IntegrityError as ie:
+                    conn.commit()
+                    self.logger.log("database", "add quotee", Status.WARN, f'{str(ie)} "{quote.quotee}"')
 
-        try:
-            cur.execute("INSERT INTO contributor VALUES (?);", (contributor,))
-            conn.commit()
-        except sqlite3.IntegrityError as ie:
-            # TODO log repeat
-            print(ie)
-        except Exception as e:
-            # TODO log err
-            conn.commit()
-            conn.close()
-            return -2
+                try:
+                    cur.execute("INSERT INTO contributor VALUES (?);", (contributor,))
+                    conn.commit()
+                except sqlite3.IntegrityError as ie:
+                    conn.commit()
+                    self.logger.log("database", "add contributor", Status.WARN, f'{str(ie)} "{contributor}"')
 
-        try:
-            cur.execute(
-                "INSERT INTO quote (pre_context, quote, post_context, quotee, contributor) VALUES (?, ?, ?, ?, ?);",
-                (quote.pre_context, quote.quote, quote.post_context, quote.quotee, contributor)
-            )
-            conn.commit()
-        except Exception as e:
-            print(e)
-            conn.commit()
-            conn.close()
-            return -3
+                cur.execute(
+                    "INSERT INTO quote (pre_context, quote, post_context, quotee, contributor) VALUES (?, ?, ?, ?, ?);",
+                    (quote.pre_context, quote.quote, quote.post_context, quote.quotee, contributor)
+                )
+                conn.commit()
 
-        try:
-            cur.execute("SELECT MAX(ROWID) FROM quote")
-            return cur.fetchall()[0][0]
-        except Exception as e:
-            print(e)
-            conn.commit()
-            conn.close()
-            return -4
-        finally:
-            conn.commit()
-            conn.close()
-            
+                cur.execute("SELECT MAX(ROWID) FROM quote")
+                return cur.fetchall()[0][0]
+
     def find_similar_quotee(self, quotee: str) -> list[str]:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            # Find similar quotees
-            cur.execute("SELECT name FROM quotee WHERE name LIKE ?;", (f"%{quotee}%",))
-            data = cur.fetchall()
-            conn.commit()
-            return [q[0] for q in data]
-
-        except Exception as e:
-            # TODO log err
-            print(e)
-            return []
-        finally:
-            conn.commit()
-            conn.close()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                # Find similar quotees
+                cur.execute("SELECT name FROM quotee WHERE name LIKE ?;", (f"%{quotee}%",))
+                data = cur.fetchall()
+                conn.commit()
+                return [q[0] for q in data]
 
     def get_all_quotees(self) -> list[str]:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            # Get names
-            cur.execute("SELECT name FROM quotee;")
-            data = cur.fetchall()
-            conn.commit()
-            # format quotees
-            return [q[0] for q in data]
-        except Exception as e:
-            # TODO log err
-            print(e)
-            return []
-        finally:
-            conn.commit()
-            conn.close()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                # Get names
+                cur.execute("SELECT name FROM quotee;")
+                data = cur.fetchall()
+                conn.commit()
+                # format quotees
+                return [q[0] for q in data]
 
     def get_all_quotes(self, quotee: str = None) -> list[Quote]:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            # No quotee, get all quotes
-            if quotee is None:
-                cur.execute("SELECT quote, quotee, pre_context, post_context FROM quote;")
-            # Else get all quotes by person
-            else:
-                cur.execute(
-                    "SELECT quote, quotee, pre_context, post_context FROM quote WHERE quotee = ?;",
-                    (quotee,)
-                )
-            data = cur.fetchall()
-            conn.commit()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
 
-            return [Quote(q[0], q[1], q[2], q[3]) for q in data]
-        except Exception as e:
-            # TODO log err
-            print(e)
-            return []
-        finally:
-            conn.commit()
-            conn.close()
+                # No quotee, get all quotes
+                if quotee is None:
+                    cur.execute("SELECT quote, quotee, pre_context, post_context FROM quote;")
+                # Else get all quotes by person
+                else:
+                    cur.execute(
+                        "SELECT quote, quotee, pre_context, post_context FROM quote WHERE quotee = ?;",
+                        (quotee,)
+                    )
+                data = cur.fetchall()
+
+                return [Quote(q[0], q[1], q[2], q[3]) for q in data]
 
     def get_rand_quote(self, quotee: str = None) -> Quote | None:
         quotes = self.get_all_quotes(quotee)
@@ -161,46 +128,26 @@ class Database:
         return quotes[rand_id]
 
     def get_quote_total(self, quotee: str = None) -> int:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            if quotee is None:
-                cur.execute("SELECT COUNT(ROWID) FROM quote;")
-            else:
-                cur.execute("SELECT COUNT(ROWID) FROM quote WHERE quotee = ?;", (quotee,))
-            count = cur.fetchall()[0][0]
-            return count
-        except Exception as e:
-            # TODO log err
-            print(e)
-            return -1
-        finally:
-            conn.commit()
-            conn.close()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                if quotee is None:
+                    cur.execute("SELECT COUNT(ROWID) FROM quote;")
+                else:
+                    cur.execute("SELECT COUNT(ROWID) FROM quote WHERE quotee = ?;", (quotee,))
+                count = cur.fetchall()[0][0]
+                return count
 
     def get_quotee_total(self) -> int:
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            cur.execute("SELECT COUNT(*) FROM quotee;")
-            count = cur.fetchall()[0][0]
-            return count
-        except Exception as e:
-            # TODO log err
-            print(e)
-            return -1
-        finally:
-            conn.commit()
-            conn.close()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                cur.execute("SELECT COUNT(*) FROM quotee;")
+                count = cur.fetchall()[0][0]
+                return count
 
     def log(self, user: str, action: str, status: str, add_info=None):
-        conn = sqlite3.connect(self.db_location)
-        cur = conn.cursor()
-        try:
-            cur.execute(
-                "INSERT INTO log (user, action, status, additional_info) VALUES (?, ?, ?, ?);",
-                (user, action, status, add_info)
-            )
-        finally:
-            conn.commit()
-            conn.close()
+        with self.open_connection() as conn:
+            with self.get_cursor(conn) as cur:
+                cur.execute(
+                    "INSERT INTO log (user, action, status, additional_info) VALUES (?, ?, ?, ?);",
+                    (user, action, status, add_info)
+                )
