@@ -8,7 +8,7 @@
 - Get Random Quotes
 
 ## Quickstart Guide
-
+> To run via docker, see [Docker Usage](#docker-usage)
 1. Follow this [guide](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token) to learn how create a new Discord Bot and add it to your server.
    1. **SAVE THE TOKEN**. It will be needed when creating the `.env` file in step 6
 > ⚠️ With the new Discord v2 changes, make sure all `Privileged Gateway Intents` are enabled ⚠️
