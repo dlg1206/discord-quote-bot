@@ -39,7 +39,7 @@ TOKEN=<your token here>
 ```
 7. Launch the bot inside `src` directory
 ```bash
-python3 quotebot/__main__.py
+python3 quotebot
 ```
 
 ## Commands
@@ -76,7 +76,7 @@ Examples:
 By default, QuoteBot will look for a dot `.env` file to load variables from, but the path can be explicitly using the
 `-e` flag. 
 ```bash
-python3 quotebot/__main__.py -e <path to env file>
+python3 quotebot -e <path to env file>
 ```
 ### Optional Environment Variables
 - `DATABASE_PATH` (default: `data/db/quotes.db): Path to SQLite database file. Will be created if does not exist,
@@ -88,6 +88,39 @@ DATABASE_PATH=path/to/sqlite/file
 ```
 BLACKLIST=866855045626135040,8668552233426135041
 ```
+
+## Docker Usage
+A docker image is available to host the bot
+
+### Building the Image
+```bash
+docker build -t quotebot:2.5.0 .
+```
+
+### Running the Container
+#### Quick Start
+( If running in the root directory )
+```bash
+docker run --rm -it -d -e TOKEN=<your token here> -v $pwd/src/data/db:/app/data/db --name quotebot quotebot:2.5.0
+```
+To reattach, run `docker attach quotebot`
+
+#### Explanation
+```bash
+# Just using token
+docker run --rm -it -d -e TOKEN=<your token here> -v $pwd/<path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+# or using env file 
+docker run --rm -it -d --env-file <path to env file> -v $pwd/<path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+```
+- `--rm`: Remove container when finished
+- `-it`: Open interactive shell to allow for `docker attach`
+- `-d`: Run container in detached mode, i.e. in the background
+- `-e`: Set environment variable, TOKEN must be set
+- `--env-file`: Path to environment file to use, same as `python3 quotebot -e <path to env file>`
+- `-v`: Mount db directory to container's db directory. This allows for the container to stopped and started without 
+loosing quote info. Also allows for SQLite db to be accessed outside the container
+- `--name`: Name of the container
+- `<image>`: Name of image to use, in this case `quotebot:2.5.0`
 
 ## Debug
 QuoteBot has an additional command, `qkill`, which will kill the bot process from inside Discord. This can only be used 
