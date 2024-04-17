@@ -54,7 +54,7 @@ class Database:
             print(e)
             conn.commit()
             conn.close()
-            return 1
+            return -1
 
         try:
             cur.execute("INSERT INTO contributor VALUES (?);", (contributor,))
@@ -66,7 +66,7 @@ class Database:
             # TODO log err
             conn.commit()
             conn.close()
-            return 2
+            return -2
 
         try:
             cur.execute(
@@ -78,12 +78,20 @@ class Database:
             print(e)
             conn.commit()
             conn.close()
-            return 3
+            return -3
 
-        conn.commit()
-        conn.close()
-        return 0
-
+        try:
+            cur.execute("SELECT MAX(ROWID) FROM quote")
+            return cur.fetchall()[0][0]
+        except Exception as e:
+            print(e)
+            conn.commit()
+            conn.close()
+            return -4
+        finally:
+            conn.commit()
+            conn.close()
+            
     def find_similar_quotee(self, quotee: str) -> list[str]:
         conn = sqlite3.connect(self.db_location)
         cur = conn.cursor()
@@ -185,13 +193,14 @@ class Database:
             conn.commit()
             conn.close()
 
-
-if __name__ == '__main__':
-    db = Database()
-    # db.add_quote("foobar", "foo", "bar")
-    # db.add_quote("foobar", "bar", "foo")
-    # db.add_quote("foobar", "foo", "bar")
-    # db.get_quote_total()
-    # al = db.get_all_quotes()
-    # foo = db.get_quote_total("b")
-    # print(foo)
+    def log(self, user: str, action: str, status: str, add_info=None):
+        conn = sqlite3.connect(self.db_location)
+        cur = conn.cursor()
+        try:
+            cur.execute(
+                "INSERT INTO log (user, action, status, additional_info) VALUES (?, ?, ?, ?);",
+                (user, action, status, add_info)
+            )
+        finally:
+            conn.commit()
+            conn.close()
