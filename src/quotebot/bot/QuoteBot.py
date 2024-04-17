@@ -13,7 +13,7 @@ from db.Database import Database
 from log.Logger import Logger, Status
 from quote.Quote import format_quotee, is_quote, parse_quote
 
-VERSION = "2.4"
+VERSION = "2.5"
 SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
 COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill")  # list of commands
 
@@ -201,14 +201,14 @@ class QuoteBot(commands.Bot):
             """
             await ctx.channel.send(f"__**QuoteBoi Version: {self.version}**__\n" +
                                    f"Source Code: {self.source_code}\n" +
-                                   "> - Add quote: `!qadd \"[quote]\" -[Quotee]`\n" +
-                                   "> - Get Quote: `!q [Name]`\n" +
-                                   "> - Get All quotes: `!qall [Name]`\n" +
+                                   "> - Add quote: `!qadd \"quote\" -Quotee`\n" +
+                                   "> - Get Quote: `!q Name`\n" +
+                                   "> - Get All quotes: `!qall Name`\n" +
                                    "> - Random Quote: `!qrand`\n" +
                                    "> - All People list: `!qsearch`\n" +
-                                   "> - Keyword Search: `!qsearch [Keywords]`\n" +
+                                   "> - Keyword Search: `!qsearch keyword`\n" +
                                    "> - Total Quote Stats: `!qstat`\n" +
-                                   "> - Person Quote Stats: `!qstat [Name]`\n" +
+                                   "> - Person Quote Stats: `!qstat Name`\n" +
                                    "> - Help: `!qhelp`")
             await ctx.channel.send("**'Quote Like' Support**\n" +
                                    "> QuoteBoi will detect 'Quote Like' messages in *roughly* the following format:\n" +
