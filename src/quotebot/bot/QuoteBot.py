@@ -241,8 +241,9 @@ class QuoteBot(commands.Bot):
         # Print not found
         await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
 
-        # print similar if any
-        similar = [f"> - {format_quotee(q)}" for q in self.database.find_similar_quotee(quotee)]
+        # print similar if any, bold matches
+        similar = [f"> - {format_quotee(q.lower().replace(quotee.lower(), f"**{quotee}**"))}"
+                   for q in self.database.find_similar_quotee(quotee)]
         if len(similar) != 0:
             await ctx.channel.send(f"{prompt}\n{'\n'.join(similar)}\n")
             self.logger.log(str(ctx.message.author), "list_similar", Status.SUCCESS, f"{quotee} matches {len(similar)}")
