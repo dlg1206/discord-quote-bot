@@ -9,13 +9,38 @@
 
 ## Quickstart Guide
 
-1. Follow this [guide](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token) to learn
-    how create a new Discord Bot and add it to your server.
+1. Follow this [guide](https://github.com/reactiflux/discord-irc/wiki/Creating-a-discord-bot-&-getting-a-token) to learn how create a new Discord Bot and add it to your server.
+   1. **SAVE THE TOKEN**. It will be needed when creating the `.env` file in step 6
 > ⚠️ With the new Discord v2 changes, make sure all `Privileged Gateway Intents` are enabled ⚠️
-2. Copy the new token of the Discord Bot.
-3. Run `py .\quotebot\__main__.py <token>` in `src` directory to start the bot.
 
-To use the example quotes file, run `py .\quotebot\__main__.py <token> ../DemoQuotes/quotes.json`
+2. Clone the repo
+```bash
+git clone git@github.com:dlg1206/Discord-Quote-Bot.git
+```
+3. Change into the `src` directory
+```bash
+cd src
+```
+4. **(OPTIONAL)** Create a virtual python environment
+```bash
+python3 -m venv venv
+```
+5. Install dependencies
+```bash
+pip install -r requirements.txt
+```
+6. Copy the new token of the Discord Bot from step 1 into a `.env` file inside the `src` directory
+```bash
+touch .env
+```
+Example `.env` file, see [Environment Variables](#environment-variables) for additional details
+```
+TOKEN=<your token here>
+```
+7. Launch the bot inside `src` directory
+```bash
+python3 quotebot/__main__.py
+```
 
 ## Commands
 Quotebot has 7 total commands with the command prefix `!`
@@ -37,27 +62,33 @@ Quotebot has 7 total commands with the command prefix `!`
   - Usage: `!qhelp`
 
 ## 'Quote Like' Support
-Quotes can be directly added using the `qadd` command. However, QuoteBot can parse messages to automatically add quotes
+Quotes can be directly added using the `!qadd` command. However, QuoteBot can parse messages to automatically add quotes
 if they match the following format:
 
-`[pre-context] "[quote]" [post-context] -[quotee]`
+`(pre-context) "quote" (post-context) -Quotee`
 
 Examples:
+- "I'm the Trash Man! I come out, I throw trash all over the- all over the ring!" - Frank Reynolds
 - (holding a calculator) "What are you?" -Charlie Kelly
-- "I reign supreme over everyone in this school! I’m the golden god of this place!" (proceedes to run away) -Dennis Reynolds
+- "I reign supreme over everyone in this school! I’m the golden god of this place!" (proceeds to run away) -Dennis Reynolds
 
-## Custom Quote Lists
-By default, QuoteBot will use a default quotes file that can be reused. To use a different quote directory,
-make a new quotes json (see [`quotes.json`](DemoQuotes/quotes.json) for reference) file. Then rerun QuoteBot with the 
-file as an argument like so:
-
-`py main.py <token> <path to quote file>`
+## Environment Variables
+By default, QuoteBot will look for a dot `.env` file to load variables from, but the path can be explicitly using the
+`-e` flag. 
+```bash
+python3 quotebot/__main__.py -e <path to env file>
+```
+### Optional Environment Variables
+- `DATABASE_PATH` (default: `data/db/quotes.db): Path to SQLite database file. Will be created if does not exist,
+otherwise use what's stored.
+```
+DATABASE_PATH=path/to/sqlite/file
+```
+- `BLACKLIST` (default: None): Comma seperated list of channel ids to exclude from 'quote-like' additions
+```
+BLACKLIST=866855045626135040,8668552233426135041
+```
 
 ## Debug
 QuoteBot has an additional command, `qkill`, which will kill the bot process from inside Discord. This can only be used 
 by the owner of the Bot.
-
-To exclude certain channels from 'Quote like' detection, copy the channel ID and add it the `BLACKLIST_CHANNELS` array
-found in [Commands.py](src/quotebot/bot/Commands.py)
-
-Lastly, QuoteBot debug logs can also be found in the current directory and print to `stdout` while running

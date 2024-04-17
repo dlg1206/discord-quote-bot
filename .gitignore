@@ -160,6 +160,6 @@ cython_debug/
 .idea/
 
 venv
-.env
+*.db
 # convential commits
 node_modules/

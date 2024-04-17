@@ -4,290 +4,252 @@ Description: Collection of Commands for the Discord Bot
 
 @author Derek Garcia
 """
-
-import datetime
-import json
-import random
+import re
 
 import discord
 from discord.ext import commands
 
-from util import Util
-from util.Logger import log
+from db.Database import Database
+from log.Logger import Logger, Status
+from quote.Quote import format_quotee, is_quote, parse_quote
 
-VERSION = "2.4"
+VERSION = "2.5"
+SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
+COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill")  # list of commands
 
 
 class QuoteBot(commands.Bot):
 
-    def __init__(self, quote_data, quote_path):
+    def __init__(self, database: Database, blacklist_channels: str = None):
         """
-        Create new Bot
+        Create new Quote Bot
 
-        :param quote_data: preloaded json data
-        :param quote_path: source directory of data
+        :param database: Quote database to use
+        :param blacklist_channels: optional string list of black listed channels to ignore for 'quote-like' add
         """
         super().__init__(command_prefix="!", intents=discord.Intents.all())
-        self.quote_data = quote_data
-        self.quote_path = quote_path
+        self.database = database
+        self.logger = Logger(database)
         self.version = VERSION
+        self.source_code = SOURCE_CODE
+        self.blacklist_channels = {} if blacklist_channels is None else set(blacklist_channels.split(","))
 
-        # ADD CHANNEL ID'S TO EXCLUDE FROM QUOTE DETECTION
-        self.blacklist_channels = []
-
+        # Init custom commands
         self.init_commands()
 
-    def init_commands(self):
+    def init_commands(self) -> None:
         """
-        Register custom commands to the bot:
+        Register custom commands to the bot
         """
+
         @self.command()
-        async def qadd(ctx, *, prompt=None):
+        async def qadd(ctx, *, prompt=None) -> None:
             """
             Adds quote to quote dictionary and txt file
+
             :param ctx: command prefix
             :param prompt: Entire quote/author
             """
             # Check if prompt was given
             if prompt is None:
-                await ctx.channel.send("Proper Usage: `!qadd \"[quote]\" -[Quotee]`")
-                log(ctx.message.author, "!qadd", False, "No args")
+                await ctx.channel.send('Proper Usage: `!qadd "[quote]" -[Quotee]`')
+                self.logger.log(str(ctx.message.author), "!qadd", Status.ERROR, "No args")
                 return
 
-            # Else split
-            key = '-'  # Custom Split key
-            split_prompt = f"{prompt}".split(key)
+            # Check if quote
+            if not is_quote(prompt):
+                await ctx.channel.send('Sorry, I didn\'t get that :(\nCommand: `!qadd "[quote]" -[Quotee]`')
+                self.logger.log(str(ctx.message.author), "!qadd", Status.ERROR, f"Failed to parse: {prompt}")
+                return
 
-            # Error check, should only be 2 parts
-            if len(split_prompt) != 2:
-                await ctx.channel.send("Sorry, I didn't get that :(\nCommand: `!qadd \"[quote]\" -[Quotee]`")
-                log(ctx.message.author, "!qadd", False, f"invalid args: {prompt}")
-            # Quote is valid
-            else:
-                # Break quote into quote and quotee
-                quote = split_prompt[0].replace("\"", "").strip()
-                quotee = split_prompt[1].lower().strip()
+            # Upload to db
+            code = self.database.add_quote(parse_quote(prompt), str(str(ctx.message.author)))
 
-                # make new quote object
-                quote_obj = {'quote': quote,
-                             'contributor': str(ctx.message.author),
-                             'timestamp': str(datetime.datetime.now())
-                             }
-
-                # Init quotee if needed
-                if quotee not in self.quote_data["quotes"]:
-                    self.quote_data["quotes"][quotee] = []
-
-                # append quote and update count
-                self.quote_data["quotes"][quotee].append(quote_obj)
-                self.quote_data["num_quotes"] += 1
-
-                # update json file
-                with open(self.quote_path, "w") as json_file:
-                    json_file.write(json.dumps(self.quote_data, indent=4))
-
-                # Confirmation
+            # Confirmation
+            if code > 0:
                 await ctx.channel.send("Quote added! :)")
+                self.logger.log(str(ctx.message.author), "!qadd", Status.SUCCESS, code)
+            else:
+                # error
+                self.logger.log(str(ctx.message.author), "!qadd", Status.ERROR, f"Failed to upload: {prompt}")
 
-                await self.change_presence(
-                    activity=discord.Game(f"{self.quote_data['num_quotes']} quotes and counting!"))
-
-            # Record Outcome in data file
-            log(ctx.message.author, "!qadd", True, prompt)
-            return
+            await self.change_presence(
+                activity=discord.Game(f"{self.database.get_quote_total()} quotes and counting!"))
 
         @self.command()
-        async def q(ctx, *, quotee=None):
+        async def q(ctx, *, quotee=None) -> None:
             """
             Get a random quote from given name
+
             :param ctx: command
             :param quotee: name to search quotes for
-            :return:
             """
 
             # check if quotee was given
             if quotee is None:
                 await ctx.channel.send("Proper Usage: `!q [Name]`")
-                log(ctx.message.author, "!q", False, "No args")
+                self.logger.log(str(ctx.message.author), "!q", Status.ERROR, "No args")
                 return
 
-            # If name exist in self.quote_data
-            rand_quote = Util.rand_quote(self.quote_data['quotes'], quotee.lower())
+            # Print random quote if one exits
+            rand_quote = self.database.get_rand_quote(quotee)
             if rand_quote is not None:
-                # Print quote and person
-                await ctx.channel.send(f"{rand_quote} -{Util.disp_format(quotee)}")
-                log(ctx.message.author, "!q", True)
-            # If name not in QUOTES
-            else:
+                await ctx.channel.send(rand_quote)
+                self.logger.log(str(ctx.message.author), "!q", Status.SUCCESS)
+                return
 
-                # Print not found
-                await ctx.channel.send("I don't have any quotes from " + f"{quotee}" + " :(")
-
-                # list similar
-                suggest = Util.similar_names(self.quote_data['quotes'], quotee)
-                if suggest is not None:
-                    await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
-
-                log(ctx.message.author, "!q", False, f"No quotes from {quotee}")
-
-            return
+            # If name not in QUOTES, print not found
+            self.logger.log(str(ctx.message.author), "!q", Status.WARN, f"No quotes found for {quotee}")
+            await self.list_similar(ctx, quotee)
 
         @self.command()
-        async def qall(ctx, *, quotee=None):
+        async def qall(ctx, *, quotee=None) -> None:
             """
             Get all the quotes for a specific person
+
             :param ctx: command
             :param quotee: name to search quotes for
             """
 
+            # Invalid usage
             if quotee is None:
                 await ctx.channel.send("Proper Usage: `!qall [Name]`")
-                log(ctx.message.author, "!qall", False, "No args")
+                self.logger.log(str(ctx.message.author), "!qall", Status.ERROR, "No args")
                 return
 
-            # If name exist in QUOTES
-            if quotee.lower() in self.quote_data['quotes']:
-                person = self.quote_data['quotes'][quotee.lower()]  # Get person from dict
-                # Cycle through and print out all quotes that person has
-                count = 1
-                all_quotes = ""
-                for quote_obj in person:
-                    all_quotes = f"{all_quotes}> **{count}:** {quote_obj['quote']}\n"
-                    count += 1
+            # Search for quotes
+            quotes = self.database.get_all_quotes(quotee)
 
-                await ctx.channel.send(f"{all_quotes}"
-                                       f"**{Util.disp_format(quotee)} has {count - 1} quotes!**")
-                log(ctx.message.author, "!qall", True)
-            # If name isn't in QUOTES
-            else:
-                await ctx.channel.send("I don't have any quotes from " + f"{Util.disp_format(quotee)}" + " :(")
+            # If no quotes, check for similar
+            if len(quotes) == 0:
+                self.logger.log(str(ctx.message.author), "!qall", Status.WARN, f"No quotes found for {quotee}")
+                await self.list_similar(ctx, quotee)
+                return
 
-                # list similar
-                suggest = Util.similar_names(self.quote_data['quotes'], quotee)
-                if suggest is not None:
-                    await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
-
-                log(ctx.message.author, "!qall", False, f"No quotes from {quotee}")
-            return
+            # Format and display all quotes
+            only_quotes = [f'> - "{q.quote}"' for q in quotes]
+            self.logger.log(str(ctx.message.author), "!qall", Status.SUCCESS, f"Found {len(quotes)} for {quotee}")
+            await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
+                                   f"**{format_quotee(quotee)} has {len(quotes)} quotes!**")
 
         @self.command()
-        async def qrand(ctx):
+        async def qrand(ctx) -> None:
             """
-            Get random quote from Entire quote dictionary
+            Get random quote from entire quote dictionary
+
             :param ctx: Command
             """
-            quotee = random.choice(list(self.quote_data['quotes']))  # Get random name from quote dictionary
-            rand_quote = Util.rand_quote(self.quote_data['quotes'], quotee)  # get rand quote
-            # Print Random quote and author
-            await ctx.channel.send(f"{rand_quote} -{Util.disp_format(quotee)}")
-
-            # Record Outcome in data file
-            log(ctx.message.author, "!qrand", True)
-            return
+            rand_quote = self.database.get_rand_quote()
+            await ctx.channel.send(rand_quote)
+            self.logger.log(str(ctx.message.author), "!qrand", Status.SUCCESS)
 
         @self.command()
-        async def qsearch(ctx, *, keywords=None):
+        async def qsearch(ctx, *, keywords=None) -> None:
             """
             Searches database for people's names. Either lists all or ones that match the keywords
 
             :param ctx: command
             :param keywords: optional keywords to look for
             """
+            # Get all quotees if no keywords
             if keywords is None:
-                # List ALL names in database
-                all_names = self.quote_data['quotes'].keys()
-                suggest = ""
-                for name in all_names:
-                    suggest = f"{suggest}> {Util.disp_format(name)}\n"
-
-                await ctx.channel.send(f"**I have quotes from all these people!**\n{suggest.strip()}")
-                log(ctx.message.author, "!qsearch", True)
+                all_quotees = [f"> {format_quotee(q)}" for q in self.database.get_all_quotees()]
+                await ctx.channel.send(f"**I have quotes from all these people!**\n{'\n'.join(all_quotees)}")
+                self.logger.log(str(ctx.message.author), "!qsearch", Status.SUCCESS,
+                                f"Found {len(all_quotees)} quotees")
+            # Search for quotees that match the keywords
             else:
-                # List names that match the keywords
-                suggest = Util.similar_names(self.quote_data['quotes'], keywords)
-                if suggest is not None:
-                    await ctx.channel.send(f"Here's what I could find:\n{suggest.strip()}")
-                    log(ctx.message.author, "!qsearch [keywords]", True)
-            return
+                similar = [format_quotee(q) for q in self.database.find_similar_quotee(keywords)]
+                if len(similar) != 0:
+                    await ctx.channel.send(f"Here's what I could find:\n{'\n'.join(similar)}")
+                    self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
+                                    f"keywords={keywords}")
 
         @self.command()
-        async def qstat(ctx, *, quotee=None):
+        async def qstat(ctx, *, quotee=None) -> None:
             """
-            Gets Stats of QuoteBoi
+            Gets Stats of QuoteBoi or user
 
             :param ctx: Command
             :param quotee: optional quotee field
             """
-            # No args given print entire system info
+            # Get total number of quotes and quotees if no quotee
             if quotee is None:
-                # Print num quotes from num people
                 await ctx.channel.send(
-                    f"I have {self.quote_data['num_quotes']} quotes from {len(self.quote_data['quotes'])} people!")
-                log(ctx.message.author, "!qstat", True)
+                    f"I have {self.database.get_quote_total()} quotes from {self.database.get_quotee_total()} people!")
+                self.logger.log(str(ctx.message.author), "!qstat", Status.SUCCESS)
                 return
 
-            # Check if in data
-            if quotee.lower() in self.quote_data['quotes']:
+            # Check for quotes from given quotee
+            num_quotes = self.database.get_quote_total(quotee)
+            if num_quotes != 0:
+                await ctx.channel.send(f"{format_quotee(quotee)} has {num_quotes} quotes!")
+                self.logger.log(str(ctx.message.author), "!qstat [quotee]", Status.SUCCESS, quotee)
 
-                # Get person from QUOTES and random quote
-                person = self.quote_data['quotes'][quotee.lower()]
-
-                # Print quote and person
-                await ctx.channel.send(f"{Util.disp_format(quotee)} has {len(person)} quotes!")
-                log(ctx.message.author, "!qstat [quotee]", True, quotee)
-            # If name not in QUOTES
+            # If none found, list similar
             else:
                 # Print not found
-                await ctx.channel.send("I don't have any quotes from " + f"{Util.disp_format(quotee)}" + " :(")
-
-                # print similar
-                suggest = Util.similar_names(self.quote_data['quotes'], quotee)
-                if suggest is not None:
-                    await ctx.channel.send(f"Did you mean anyone here?\n{suggest.strip()}")
-
-                log(ctx.message.author, "!qstat", False, f"No quotes from {quotee}")
-            return
+                self.logger.log(str(ctx.message.author), "!qstat", Status.WARN, f"No quotes from {quotee}")
+                await self.list_similar(ctx, quotee)
 
         @self.command()
-        async def qhelp(ctx):
+        async def qhelp(ctx) -> None:
             """
             Prints command arguments
 
             :param ctx: Command
-            :return:
             """
-
             await ctx.channel.send(f"__**QuoteBoi Version: {self.version}**__\n" +
-                                   "> - Add quote: `!qadd \"[quote]\" -[Quotee]`\n" +
-                                   "> - Get Quote: `!q [Name]`\n" +
-                                   "> - Get All quotes: `!qall [Name]`\n" +
+                                   f"Source Code: {self.source_code}\n" +
+                                   "> - Add quote: `!qadd \"quote\" -Quotee`\n" +
+                                   "> - Get Quote: `!q Name`\n" +
+                                   "> - Get All quotes: `!qall Name`\n" +
                                    "> - Random Quote: `!qrand`\n" +
                                    "> - All People list: `!qsearch`\n" +
-                                   "> - Keyword Search: `!qsearch [Keywords]`\n" +
+                                   "> - Keyword Search: `!qsearch keyword`\n" +
                                    "> - Total Quote Stats: `!qstat`\n" +
-                                   "> - Person Quote Stats: `!qstat [Name]`\n" +
+                                   "> - Person Quote Stats: `!qstat Name`\n" +
                                    "> - Help: `!qhelp`")
             await ctx.channel.send("**'Quote Like' Support**\n" +
                                    "> QuoteBoi will detect 'Quote Like' messages in *roughly* the following format:\n" +
-                                   "> `[pre-context] \"[quote]\" [post-context] -[quotee]`\n" +
+                                   "> `(pre-context) \"quote\" (post-context) -quotee`\n" +
                                    "> There's no guarantee, but it's good at detecting them. `!qadd` is the only way\n" +
                                    "> to add quotes for sure")
-            log(ctx.message.author, "!qhelp", True)
-
-            return
+            self.logger.log(str(ctx.message.author), "!qhelp", Status.SUCCESS)
 
         @self.command()
         @commands.is_owner()
-        async def qkill(ctx):
+        async def qkill(ctx) -> None:
             """
             Master kill switch from inside discord
 
             :param ctx: command
             """
-            quotee = random.choice(list(self.quote_data['quotes']))
-            quote = Util.rand_quote(self.quote_data['quotes'], quotee)
-            await ctx.channel.send(f"Goodbye, in the words of {Util.disp_format(quotee)}: {quote}")
-            exit()
+            quote = self.database.get_rand_quote()
+            await ctx.channel.send(f'Goodbye, and in the words of {format_quotee(quote.quotee)}: "{quote}"')
+            self.logger.log(str(ctx.message.author), "!qkill", Status.SUCCESS)
+            exit(0)
+
+    async def list_similar(self, ctx: discord.channel, quotee: str, prompt: str = "Did you mean anyone here?") -> None:
+        """
+        List quotees that are a partial match to the given quotee
+
+        :param ctx: command
+        :param quotee: Quotee to attempt to match
+        :param prompt: Prompt message to pair list with
+        """
+        # Print not found
+        await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
+
+        # print similar if any, bold matches
+        similar = [f"> - {format_quotee(q.lower().replace(quotee.lower(), f"**{quotee}**"))}"
+                   for q in self.database.find_similar_quotee(quotee)]
+        if len(similar) != 0:
+            await ctx.channel.send(f"{prompt}\n{'\n'.join(similar)}\n")
+            self.logger.log(str(ctx.message.author), "list_similar", Status.SUCCESS, f"{quotee} matches {len(similar)}")
+        # Else just log none found
+        else:
+            self.logger.log(str(ctx.message.author), "list_similar", Status.WARN, f"Nothing similar to {quotee}")
 
     async def on_message(self, message) -> None:
         """
@@ -296,27 +258,18 @@ class QuoteBot(commands.Bot):
         :param message: message to parse
         """
 
-        await self.process_commands(message)  # exe any commands first
+        # exe any commands first
+        await self.process_commands(message)
 
         # ignore any commands or messages from self
-        if Util.is_command(message.content) or message.author.bot:
+        if bool(re.search(COMMANDS_REGEX, message.content.strip())) or message.author.bot:
             return
 
-        # ignore any none quote like commands
-        if not Util.is_quote(message.content):
-            return
-
-        # Don't include quotes from blacklisted Channels
-        if message.channel.id in self.blacklist_channels:
-            return
-
-        # attempt to add quote
-        if Util.add_quote(self.quote_path, self.quote_data, message):
-            log(message.author, "quote-like add", True, message.content)
-            await self.change_presence(
-                activity=discord.Game(f"{self.quote_data['num_quotes']} quotes and counting!"))
-        else:
-            log(message.author, "quote-like add", False, message.content)
+        # "quote-like" add, not explicit command and in a valid channel
+        if is_quote(message.content) and message.channel.id not in self.blacklist_channels:
+            qid = self.database.add_quote(parse_quote(message.content), str(message.author))
+            self.logger.log(str(message.author), "quote-like add", Status.SUCCESS, f"{qid} | {message.content}")
+            await self.change_presence(activity=discord.Game(f"{self.database.get_quote_total()} quotes and counting!"))
 
     async def on_ready(self) -> None:
         """
@@ -324,10 +277,9 @@ class QuoteBot(commands.Bot):
 
         :return:
         """
-
+        self.logger.log("admin", "start", Status.INFO, "Starting bot. . .")
         await self.change_presence(status=discord.Status.online,
-                                   activity=discord.Game(f"{self.quote_data['num_quotes']} quotes and counting!"))
-        print('{0.user}'.format(self) + " is online")
-        print(f"Quote File: {self.quote_path}")
+                                   activity=discord.Game(f"{self.database.get_quote_total()} quotes and counting!"))
 
-        log("admin", "run bot", True)
+        self.logger.log("admin", "start", Status.INFO, '{0.user}'.format(self) + " is online")
+        self.logger.log("admin", "start", Status.SUCCESS, f"database: {self.database.db_location}")
