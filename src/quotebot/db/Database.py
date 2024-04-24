@@ -81,7 +81,7 @@ class Database:
             with self.get_cursor(conn) as cur:
                 # Add new quotee if does not exist
                 try:
-                    cur.execute("INSERT INTO quotee VALUES (?);", (quote.quotee,))
+                    cur.execute("INSERT INTO quotee VALUES (?);", (quote.quotee.lower(),))
                     conn.commit()
                 except sqlite3.IntegrityError as ie:
                     conn.commit()
@@ -98,7 +98,7 @@ class Database:
                 # Upload quote
                 cur.execute(
                     "INSERT INTO quote (pre_context, quote, post_context, quotee, contributor) VALUES (?, ?, ?, ?, ?);",
-                    (quote.pre_context, quote.quote, quote.post_context, quote.quotee, contributor)
+                    (quote.pre_context, quote.quote, quote.post_context, quote.quotee.lower(), contributor)
                 )
                 conn.commit()
 
@@ -116,7 +116,7 @@ class Database:
         with self.open_connection() as conn:
             with self.get_cursor(conn) as cur:
                 # Find similar quotees
-                cur.execute("SELECT name FROM quotee WHERE name LIKE ?;", (f"%{quotee}%",))
+                cur.execute("SELECT name FROM quotee WHERE name LIKE ?;", (f"%{quotee.lower()}%",))
                 data = cur.fetchall()
                 conn.commit()
                 return [q[0] for q in data]  # convert list of tuples for list of strings
@@ -152,7 +152,7 @@ class Database:
                 else:
                     cur.execute(
                         "SELECT quote, quotee, pre_context, post_context FROM quote WHERE quotee = ?;",
-                        (quotee,)
+                        (quotee.lower(),)
                     )
                 data = cur.fetchall()
                 return [Quote(q[0], q[1], q[2], q[3]) for q in data]  # convert list of tuples for list of Quotes
@@ -185,7 +185,7 @@ class Database:
                     cur.execute("SELECT COUNT(ROWID) FROM quote;")
                 # Else get count for specific quotee
                 else:
-                    cur.execute("SELECT COUNT(ROWID) FROM quote WHERE quotee = ?;", (quotee,))
+                    cur.execute("SELECT COUNT(ROWID) FROM quote WHERE quotee = ?;", (quotee.lower(),))
                 count = cur.fetchall()[0][0]
                 return count
 

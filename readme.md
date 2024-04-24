@@ -95,23 +95,23 @@ A docker image is available to host the bot
 
 ### Building the Image
 ```bash
-docker build -t quotebot:2.5.0 .
+docker build -t quotebot:2.5.1 .
 ```
 
 ### Running the Container
 #### Quick Start
 ( If running in the root directory )
 ```bash
-docker run --rm -it -d -e TOKEN=<your token here> quotebot:2.5.0
+docker run --rm -it -d -e TOKEN=<your token here> quotebot:2.5.1
 ```
 To reattach, run `docker attach quotebot`
 
 #### Explanation
 ```bash
 # Just using token
-docker run --rm -it -d -e TOKEN=<your token here> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+docker run --rm -it -d -e TOKEN=<your token here> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.1
 # or using env file 
-docker run --rm -it -d --env-file <path to env file> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.0
+docker run --rm -it -d --env-file <path to env file> -v <absolute path to db directory>:/app/data/db --name quotebot quotebot:2.5.1
 ```
 - `--rm`: Remove container when finished
 - `-it`: Open interactive shell to allow for `docker attach`
@@ -121,7 +121,7 @@ docker run --rm -it -d --env-file <path to env file> -v <absolute path to db dir
 - `-v`: Mount db directory to container's db directory. This allows for the container to stopped and started without 
 loosing quote info. Also allows for SQLite db to be accessed outside the container
 - `--name`: Name of the container
-- `<image>`: Name of image to use, in this case `quotebot:2.5.0`
+- `<image>`: Name of image to use, in this case `quotebot:2.5.1`
 
 ## Debug
 QuoteBot has an additional command, `qkill`, which will kill the bot process from inside Discord. This can only be used 
