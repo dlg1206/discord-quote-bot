@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.1](https://github.com/dlg1206/Discord-Quote-Bot/compare/v2.5.0...v2.5.1) (2024-04-24)
+
+
+### Bug Fixes
+
+* quotee via commands are case-insensitive ([ced8f27](https://github.com/dlg1206/Discord-Quote-Bot/commit/ced8f2770a01c067395c2fe88bb14751d0c53ca2))
+
 ## 2.5.0 (2024-04-17)
 
 
