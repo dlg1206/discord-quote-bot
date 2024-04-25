@@ -168,7 +168,7 @@ class Database:
         if len(quotes) == 0:
             return None  # no quotes found
         # return random quote
-        rand_id = random.randint(1, len(quotes))
+        rand_id = random.randint(0, len(quotes) - 1)
         return quotes[rand_id]
 
     def get_quote_total(self, quotee: str = None) -> int:

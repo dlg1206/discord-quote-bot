@@ -13,7 +13,7 @@ from db.Database import Database
 from log.Logger import Logger, Status
 from quote.Quote import format_quotee, is_quote, parse_quote
 
-VERSION = "2.5.1"
+VERSION = "2.5.2"
 SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
 COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill")  # list of commands
 
@@ -95,7 +95,7 @@ class QuoteBot(commands.Bot):
             rand_quote = self.database.get_rand_quote(quotee)
             if rand_quote is not None:
                 await ctx.channel.send(rand_quote)
-                self.logger.log(str(ctx.message.author), "!q", Status.SUCCESS)
+                self.logger.log(str(ctx.message.author), "!q", Status.SUCCESS, quotee)
                 return
 
             # If name not in QUOTES, print not found
@@ -127,10 +127,10 @@ class QuoteBot(commands.Bot):
                 return
 
             # Format and display all quotes
-            only_quotes = [f'> - "{q.quote}"' for q in quotes]
+            only_quotes = [f'> - {q.format_quote()}' for q in quotes]
             self.logger.log(str(ctx.message.author), "!qall", Status.SUCCESS, f"Found {len(quotes)} for {quotee}")
             await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
-                                   f"**{format_quotee(quotee)} has {len(quotes)} quotes!**")
+                                   f"**{format_quotee(quotee)} has {len(quotes)} quote{'' if len(quotes) == 1 else 's' }!**")
 
         @self.command()
         async def qrand(ctx) -> None:
@@ -159,11 +159,9 @@ class QuoteBot(commands.Bot):
                                 f"Found {len(all_quotees)} quotees")
             # Search for quotees that match the keywords
             else:
-                similar = [format_quotee(q) for q in self.database.find_similar_quotee(keywords)]
-                if len(similar) != 0:
-                    await ctx.channel.send(f"Here's what I could find:\n{'\n'.join(similar)}")
-                    self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
-                                    f"keywords={keywords}")
+                await self.list_similar(ctx, keywords, "Here's what I could find")
+                self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
+                                f"keywords={keywords}")
 
         @self.command()
         async def qstat(ctx, *, quotee=None) -> None:
@@ -242,8 +240,14 @@ class QuoteBot(commands.Bot):
         await ctx.channel.send("I don't have any quotes from " + f"{format_quotee(quotee)}" + " :(")
 
         # print similar if any, bold matches
-        similar = [f"> - {format_quotee(q.lower().replace(quotee.lower(), f"**{quotee}**"))}"
-                   for q in self.database.find_similar_quotee(quotee)]
+        similar = []
+        pattern = re.compile(quotee, flags=re.IGNORECASE)
+        for q in self.database.find_similar_quotee(quotee):
+            # surround the matched pattern with discord bold pattern
+            formatted_quotee = format_quotee(q)
+            match = pattern.search(formatted_quotee)
+            similar.append(f"> - {formatted_quotee.replace(match.group(0), f"**{match.group(0)}**")}")
+
         if len(similar) != 0:
             await ctx.channel.send(f"{prompt}\n{'\n'.join(similar)}\n")
             self.logger.log(str(ctx.message.author), "list_similar", Status.SUCCESS, f"{quotee} matches {len(similar)}")
