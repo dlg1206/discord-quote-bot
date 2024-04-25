@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### [2.5.2](https://github.com/dlg1206/Discord-Quote-Bot/compare/v2.5.1...v2.5.2) (2024-04-25)
+
+
+### Bug Fixes
+
+* correct index out of bounds error for random quotes ([fc7315e](https://github.com/dlg1206/Discord-Quote-Bot/commit/fc7315e295de613d0d5de56d7bf89b2d6c8fdb0c))
+* qall formats quote with context correctly ([7679119](https://github.com/dlg1206/Discord-Quote-Bot/commit/7679119dceb47700ee67e0b7e72854a2d13286e6))
+* qall formats quote with context correctly ([6228751](https://github.com/dlg1206/Discord-Quote-Bot/commit/6228751abf46ef5a6e0512e2fb3bd6abcee51b06))
+* qall lists entire name and capitalizes properly with bolding ([4a3ca97](https://github.com/dlg1206/Discord-Quote-Bot/commit/4a3ca97ae59078b991ac87f01704260a06d85595))
+* qsearch lists any matches when keyword is given ([6834532](https://github.com/dlg1206/Discord-Quote-Bot/commit/6834532a8a2849adb1fba5837bc865b23ed1d0ea))
+
 ### [2.5.1](https://github.com/dlg1206/Discord-Quote-Bot/compare/v2.5.0...v2.5.1) (2024-04-24)
 
 
