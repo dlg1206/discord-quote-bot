@@ -13,7 +13,7 @@ from db.Database import Database
 from log.Logger import Logger, Status
 from quote.Quote import format_quotee, is_quote, parse_quote
 
-VERSION = "2.5.1"
+VERSION = "2.5.2"
 SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
 COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill")  # list of commands
 
