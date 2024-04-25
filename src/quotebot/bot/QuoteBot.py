@@ -95,7 +95,7 @@ class QuoteBot(commands.Bot):
             rand_quote = self.database.get_rand_quote(quotee)
             if rand_quote is not None:
                 await ctx.channel.send(rand_quote)
-                self.logger.log(str(ctx.message.author), "!q", Status.SUCCESS)
+                self.logger.log(str(ctx.message.author), "!q", Status.SUCCESS, quotee)
                 return
 
             # If name not in QUOTES, print not found
