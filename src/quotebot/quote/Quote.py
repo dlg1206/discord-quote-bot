@@ -25,14 +25,22 @@ class Quote:
         self.post_context = post_context
         self.quotee = quotee.strip().lower()
 
+    def format_quote(self) -> str:
+        """
+        Format quote portion
+        :return: (pre-context) "quote" (post-context)
+        """
+        pre_context = f"({self.pre_context}) " if self.pre_context is not None else ""
+        post_context = f" ({self.post_context})" if self.post_context is not None else ""
+        return f'{pre_context}"{self.quote}"{post_context}'
+
     def __str__(self):
         """
         Pre and post only if present
         :return: (pre-context) "quote" (post-context) - quotee
         """
-        pre_context = f"({self.pre_context}) " if self.pre_context is not None else ""
-        post_context = f" ({self.post_context})" if self.post_context is not None else ""
-        return f'{pre_context}"{self.quote}"{post_context} -{format_quotee(self.quotee)}'
+
+        return f'{self.format_quote()} - {format_quotee(self.quotee)}'
 
 
 def format_quotee(quotee: str) -> str:

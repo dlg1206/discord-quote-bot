@@ -127,10 +127,10 @@ class QuoteBot(commands.Bot):
                 return
 
             # Format and display all quotes
-            only_quotes = [f'> - {q}' for q in quotes]
+            only_quotes = [f'> - {q.format_quote()}' for q in quotes]
             self.logger.log(str(ctx.message.author), "!qall", Status.SUCCESS, f"Found {len(quotes)} for {quotee}")
             await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
-                                   f"**{format_quotee(quotee)} has {len(quotes)} quotes!**")
+                                   f"**{format_quotee(quotee)} has {len(quotes)} quote{'' if len(quotes) == 1 else 's' }!**")
 
         @self.command()
         async def qrand(ctx) -> None:
