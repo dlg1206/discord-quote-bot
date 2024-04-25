@@ -5,6 +5,7 @@ Description: Util quote object to hold quote information
 @author Derek Garcia
 """
 import re
+import string
 
 # Matches: (pre-context) "quote" (post-context) - quotee
 QUOTE_REGEX = re.compile('(?:\\((.*)\\)|).*?\\"(.*)\"(?:.*?\\((.*)\\)|).*?-(.*)')
@@ -49,16 +50,7 @@ def format_quotee(quotee: str) -> str:
 
     :return: Formatted quotee name
     """
-    # attempt to upper both first and last name
-    try:
-        first_name = quotee.split(" ")[0]
-        last_name = quotee.split(" ")[1]
-
-        return f"{first_name[0].upper() + first_name[1:].lower()} {last_name[0].upper() + last_name[1:].lower()}"
-
-    # Else just upper first name
-    except Exception as e:
-        return quotee[0].upper() + quotee[1:].lower()
+    return string.capwords(quotee)
 
 
 def parse_quote(message: str) -> Quote:
