@@ -159,11 +159,9 @@ class QuoteBot(commands.Bot):
                                 f"Found {len(all_quotees)} quotees")
             # Search for quotees that match the keywords
             else:
-                similar = [format_quotee(q) for q in self.database.find_similar_quotee(keywords)]
-                if len(similar) != 0:
-                    await ctx.channel.send(f"Here's what I could find:\n{'\n'.join(similar)}")
-                    self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
-                                    f"keywords={keywords}")
+                await self.list_similar(ctx, keywords, "Here's what I could find")
+                self.logger.log(str(ctx.message.author), "!qsearch [keywords]", Status.SUCCESS,
+                                f"keywords={keywords}")
 
         @self.command()
         async def qstat(ctx, *, quotee=None) -> None:
