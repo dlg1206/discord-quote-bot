@@ -14,7 +14,7 @@ from Logger import Logger, Status
 from Quote import format_quotee, is_quote, parse_quote
 
 VERSION = "2.5.2"
-SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
+SOURCE_CODE = "github.com/dlg1206/discord-quote-bot"
 COMMANDS_REGEX = re.compile("!qadd|!q|!qall|!qrand|!qsearch|!qstat|!qhelp|!qkill")  # list of commands
 
 
