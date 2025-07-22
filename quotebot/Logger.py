@@ -8,7 +8,7 @@ Description: Logger for actions
 from datetime import datetime
 from enum import Enum
 
-from db import Database
+from Database import Database
 
 CLEAR = "\033[00m"
 

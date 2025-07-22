@@ -9,11 +9,11 @@ import random
 import sqlite3
 from contextlib import contextmanager
 
-from log.Logger import Status, Logger
-from quote.Quote import Quote
+from Logger import Status, Logger
+from Quote import Quote
 
 DEFAULT_DB_PATH = "data/db/quotes.db"
-DEFAULT_DDL_PATH = "data/ddl"
+DEFAULT_DDL_PATH = "ddl"
 
 
 class Database:

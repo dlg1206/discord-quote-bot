@@ -11,8 +11,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-from bot.QuoteBot import QuoteBot
-from db.Database import Database
+from Database import Database
+from QuoteBot import QuoteBot
 
 
 def main() -> None:

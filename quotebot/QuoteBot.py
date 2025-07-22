@@ -9,9 +9,9 @@ import re
 import discord
 from discord.ext import commands
 
-from db.Database import Database
-from log.Logger import Logger, Status
-from quote.Quote import format_quotee, is_quote, parse_quote
+from Database import Database
+from Logger import Logger, Status
+from Quote import format_quotee, is_quote, parse_quote
 
 VERSION = "2.5.2"
 SOURCE_CODE = "github.com/dlg1206/Discord-Quote-Bot"
@@ -130,7 +130,7 @@ class QuoteBot(commands.Bot):
             only_quotes = [f'> - {q.format_quote()}' for q in quotes]
             self.logger.log(str(ctx.message.author), "!qall", Status.SUCCESS, f"Found {len(quotes)} for {quotee}")
             await ctx.channel.send(f"{'\n'.join(only_quotes)}\n"
-                                   f"**{format_quotee(quotee)} has {len(quotes)} quote{'' if len(quotes) == 1 else 's' }!**")
+                                   f"**{format_quotee(quotee)} has {len(quotes)} quote{'' if len(quotes) == 1 else 's'}!**")
 
         @self.command()
         async def qrand(ctx) -> None:
