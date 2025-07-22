@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  sbom:
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: read
+      contents: write
+    
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Generate SPDX SBOM
+        uses: anchore/sbom-action@v0.18.0
+        with:
+          path: ./quotebot
+          format: spdx
+          artifact-name: quotebot.sbom.spdx
+
+      - name: Generate CycloneDX SBOM
+        uses: anchore/sbom-action@v0.18.0
+        with:
+          path: ./quotebot
+          format: cyclonedx-json
+          artifact-name: quotebot.sbom.cdx.json
