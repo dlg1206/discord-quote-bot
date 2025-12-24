@@ -13,7 +13,7 @@ from logger import Status, log
 from quote import Quote
 
 DEFAULT_DB_PATH = "data/db/quotes.db"
-DEFAULT_DDL_PATH = "ddl"
+DEFAULT_DDL_PATH = "quotebot/ddl"
 
 
 class Database:
