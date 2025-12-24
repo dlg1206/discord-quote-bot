@@ -1,5 +1,5 @@
 """
-File: Database.py
+File: database.py
 Description: Sqlite database interface for managing quotes
 
 @author Derek Garcia
@@ -9,8 +9,8 @@ import random
 import sqlite3
 from contextlib import contextmanager
 
-from Logger import Status, Logger
-from Quote import Quote
+from logger import Status, log
+from quote import Quote
 
 DEFAULT_DB_PATH = "data/db/quotes.db"
 DEFAULT_DDL_PATH = "ddl"
@@ -39,7 +39,6 @@ class Database:
                     with open(file, 'r') as sql_file:
                         cur.executescript(sql_file.read())
 
-        self.logger = Logger(self)
 
     @contextmanager
     def open_connection(self) -> sqlite3.Connection:
@@ -85,7 +84,7 @@ class Database:
                     conn.commit()
                 except sqlite3.IntegrityError as ie:
                     conn.commit()
-                    self.logger.log("database", "add quotee", Status.WARN, f'{str(ie)} "{quote.quotee}"')
+                    log("database", "add quotee", Status.WARN, f'{str(ie)} "{quote.quotee}"', database=self)
 
                 # Add new contributor if does not exist
                 try:
@@ -93,7 +92,7 @@ class Database:
                     conn.commit()
                 except sqlite3.IntegrityError as ie:
                     conn.commit()
-                    self.logger.log("database", "add contributor", Status.WARN, f'{str(ie)} "{contributor}"')
+                    log("database", "add contributor", Status.WARN, f'{str(ie)} "{contributor}"', database=self)
 
                 # Upload quote
                 cur.execute(

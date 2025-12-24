@@ -1,5 +1,5 @@
 """
-File: Quote.py
+File: quote.py
 Description: Util quote object to hold quote information
 
 @author Derek Garcia
